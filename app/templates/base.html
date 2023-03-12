@@ -1,0 +1,16 @@
+
+<!doctype html>
+<html>
+    <head>
+      {% if title %}
+      <title>{{ title }} - AI.sati.sh</title>
+      {% else %}
+      <title>Welcome to AI.sati.sh</title>
+      {% endif %}
+    </head>
+    <body>
+        <div>AI.sati.sh: <a href="/index">Home</a></div>
+        <hr>
+        {% block content %}{% endblock %}
+    </body>
+</html>
