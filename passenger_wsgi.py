@@ -1,7 +1,7 @@
 import sys, os
 from dotenv import load_dotenv 
 load_dotenv()
-INTERP = os.path.join(os.environ['HOME'], 'summerize4me', 'venv', 'bin', 'python3')
+INTERP = os.path.join(os.environ['HOME'], 'ai.sati.sh', 'venv', 'bin', 'python3')
 if (os.environ.get('INTERP')):
         INTERP = os.environ.get('INTERP')
 
@@ -13,7 +13,6 @@ if sys.executable != INTERP:
 sys.path.append(os.getcwd())
 from flask import Flask
 application = Flask(__name__)
-@application.route('/')
-def index():
-    return 'Check back soon... '
+sys.path.append('app')
+from app import app as application
 
