@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Summarize</h1>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.summarize.label }}<br>
+            {{ form.summarize(cols=50, rows=10) }}<br>
+            {% for error in form.summarize.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <p>{{ form.submit() }}</p>
+        {% if openAI_summary %}
+        <p>Text to Summarize: <br> {{ test2summarize }}</p>
+        <p>Summary: <br> {{ openAI_summary }}</p>
+        {% endif %}
+    </form>
+{% endblock %}
