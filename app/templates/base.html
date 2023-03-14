@@ -3,13 +3,20 @@
 <html>
     <head>
       {% if title %}
-      <title>{{ title }} - ai.sati.sh</title>
+      <title>{{ title }} - Summarize4Me</title>
       {% else %}
-      <title>Welcome to ai.sati.sh</title>
+      <title>Welcome to Summarize4Me</title>
       {% endif %}
+      <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+      <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+      <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+      <link rel="manifest" href="/static/site.webmanifest">
+      <link rel="mask-icon" href="/static/safari-pinned-tab.svg" color="#5bbad5">
+      <meta name="msapplication-TileColor" content="#da532c">
+      <meta name="theme-color" content="#ffffff">
     </head>
     <body>
-        <div>ai.sati.sh: 
+        <div><img src="/static/Summarize4Me-Logo.png" height="40px" width="40px"> Summarize4Me: 
           <a href="{{ url_for('index') }}">Home</a> | 
           <a href="{{ url_for('summarizeText') }}">Summarize Text</a> |   
           <a href="{{ url_for('summarizeURL') }}">Summarize URL</a>     
