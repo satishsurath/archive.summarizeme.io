@@ -11,7 +11,8 @@
     <body>
         <div>ai.sati.sh: 
           <a href="{{ url_for('index') }}">Home</a> | 
-          <a href="{{ url_for('summarize') }}">Summarize</a>       
+          <a href="{{ url_for('summarizeText') }}">Summarize Text</a> |   
+          <a href="{{ url_for('summarizeURL') }}">Summarize URL</a>     
       </div>
         <hr>
         {% with messages = get_flashed_messages() %}
