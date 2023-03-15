@@ -3,9 +3,6 @@ from app import app
 from app.forms import SummarizeFromText, SummarizeFromURL
 from flask import render_template, flash, redirect, url_for
 
-from flask_turnstile import Turnstile
-turnstile = Turnstile(app=app)
-
 import json
 
 import os
@@ -28,15 +25,9 @@ def summarizeText():
     global openAI_summary
     global test2summarize
     if form.validate_on_submit():
-        #flash('Summary requested for:{}...'.format(form.summarize.data)[0:100])
-        if turnstile.verify():
-        # SUCCESS
-          openAI_summary = openAI_summarize(form.summarize.data)
-          test2summarize = form.summarize.data
-        else:
-        # FAILED
-          openAI_summary = "Sorry! You failed the 'Are you a Human Test'; We are not going to process the Summary for you"
-        return redirect(url_for('summarizeText'))
+      openAI_summary = openAI_summarize(form.summarize.data)
+      test2summarize = form.summarize.data
+      return redirect(url_for('summarizeText'))
     if (openAI_summary):
       return render_template('summarizeText.html', title='Summarize From Text', form=form,test2summarize=test2summarize, openAI_summary=openAI_summary)
     else:
@@ -48,19 +39,9 @@ def summarizeURL():
     global openAI_summary
     global test2summarize
     if form.validate_on_submit():
-        #flash('Summary requested for:{}...'.format(form.summarize.data)[0:100])
-        if turnstile.verify():
-        # SUCCESS
-          openAI_summary = openAI_summarize(form.summarize.data)
-          test2summarize = form.summarize.data
-        else:
-        # FAILED
-          openAI_summary = "Sorry! You failed the 'Are you a Human Test'; We are not going to process the Summary for you"
-        return redirect(url_for('summarizeURL'))
-        #flash('Summary requested for:{}...'.format(form.summarize.data)[0:100])
-        #openAI_summary = openAI_summarize(form.summarize.data)
-        #test2summarize = form.summarize.data
-
+      openAI_summary = openAI_summarize(form.summarize.data)
+      test2summarize = form.summarize.data
+      return redirect(url_for('summarizeURL'))
     if (openAI_summary):
       return render_template('summarizeURL.html', title='Summarize From URL', form=form,test2summarize=test2summarize, openAI_summary=openAI_summary)
     else:
