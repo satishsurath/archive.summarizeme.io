@@ -8,4 +8,5 @@ class Config(object):
     #The Default values are for testing and will "Always Allow": https://developers.cloudflare.com/turnstile/reference/testing/
     TURNSTILE_SITE_KEY = os.environ.get('TURNSTILE_SITE_KEY') or "1x00000000000000000000AA"
     TURNSTILE_SITE_SECRET = os.environ.get('TURNSTILE_SITE_SECRET') or "1x0000000000000000000000000000000AA"
-    TURNSTILE_ENABLED = True
+    #Disabling this flag until the Flask-TURNSTILE issue is resolved
+    TURNSTILE_ENABLED = False
