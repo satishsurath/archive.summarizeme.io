@@ -51,9 +51,9 @@ def summarizeURL():
 def openAI_summarize(form_prompt):
     response = openai.Completion.create(
       model="text-davinci-003",
-      prompt=form_prompt+"\n\nTl;dr",
+      prompt="Summarize the below text in a few short bullet points: \n\n"+form_prompt,
       temperature=0.7,
-      max_tokens=60,
+      max_tokens=100,
       top_p=1.0,
       frequency_penalty=0.0,
       presence_penalty=1
@@ -62,5 +62,7 @@ def openAI_summarize(form_prompt):
     print("\n",response)
     print("\n",response["choices"][0]["text"])
     text_to_return = response["choices"][0]["text"]
+    text_to_return = text_to_return.split('\n')
+    print(text_to_return)
     return text_to_return
     
