@@ -14,24 +14,26 @@
       <link rel="mask-icon" href="/static/safari-pinned-tab.svg" color="#5bbad5">
       <meta name="msapplication-TileColor" content="#da532c">
       <meta name="theme-color" content="#ffffff">
+      <link rel="stylesheet" type="text/css" href="/static/style.css">
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Cabin">
     </head>
     <body>
-        <div><img src="/static/Summarize4Me-Logo.png" height="40px" width="40px"> Summarize4Me: 
-          <a href="{{ url_for('index') }}">Home</a> | 
-          <a href="{{ url_for('summarizeText') }}">Summarize Text</a> |   
-          <a href="{{ url_for('summarizeURL') }}">Summarize URL</a>     
-      </div>
-        <hr>
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        <ul>
-            {% for message in messages %}
-            <li>{{ message }}</li>
-            {% endfor %}
+      <div class="container">
+        <div class="item">
+          <ul>
+         <li> <a href="{{ url_for('index') }}"><img src="/static/Summarize4Me-Logo.png" height="40px" width="40px">Summarize4Me</a></li>
+         <li> <a href="{{ url_for('summarizeText') }}">Summarize Text</a></li> 
+         <li> <a href="{{ url_for('summarizeURL') }}">Summarize URL</a></li>  
         </ul>
-        {% endif %}
-        {% endwith %}
-
+      </div>  
+      <div class="item">
         {% block content %}{% endblock %}
+      </div>
+      <div class="item-footer">
+        <ul>
+          <li>Contribute: <a href="https://github.com/satishsurath/summarize4me"><img src="/static/github.svg" alt="GitHub link" width="18" height="18" class="footer-img"></a></li>
+        </ul>
+    </div>  
+      </div>
     </body>
 </html>
