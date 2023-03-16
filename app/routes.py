@@ -10,6 +10,7 @@ import openai
 
 import trafilatura
 from trafilatura import extract
+from trafilatura.settings import use_config
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -42,13 +43,11 @@ def summarizeURL():
     global openAI_summary
     global test2summarize
     if form.validate_on_submit():
-     # print(form.summarize.data)
-     # downloaded = trafilatura.fetch_url(form.summarize.data)
-     # print("ok------1")
-     # test2summarize = "ok"
-     # print(downloaded)
-     # print("ok------2")
-      openAI_summary = openAI_summarize(form.summarize.data)
+      newconfig = use_config()
+      newconfig.set("DEFAULT", "EXTRACTION_TIMEOUT", "0")
+      downloaded = trafilatura.fetch_url(form.summarize.data)
+      test2summarize = extract(downloaded, config=newconfig)
+      openAI_summary = openAI_summarize(test2summarize)
       return redirect(url_for('summarizeURL'))
     if (openAI_summary):
       return render_template('summarizeURL.html', title='Summarize From URL', form=form,test2summarize=test2summarize, openAI_summary=openAI_summary)

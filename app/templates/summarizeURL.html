@@ -13,8 +13,14 @@
         </p>
         <p>{{ form.submit() }}</p>
         {% if openAI_summary %}
-        <p>Text to Summarize: <br> {{ test2summarize }}</p>
-        <p>Summary: <br> {{ openAI_summary }}</p>
+            <div class="left-align">
+            <h2>Text to Summarize:</h2> 
+            <p>{{ test2summarize }}</p>
+            <h2>Summary:</h2>
+            <p>{% for para in openAI_summary %}
+                    {{para}}<br>
+                {% endfor %}</p>
+            </div>
         {% endif %}
     </form>
 {% endblock %}
