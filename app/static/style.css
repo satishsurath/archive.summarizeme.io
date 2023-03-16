@@ -1,0 +1,61 @@
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  justify-content: center;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 90vw;
+  font-family: 'Cabin', 'Raleway', sans-serif;
+  font-display: swap;
+}
+
+.item {
+  margin: 1rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+li {
+  display: inline-block;
+  margin-right: 0.4em;
+  margin-left: 0.4em;
+  margin-top: 0.5em;
+}
+
+
+p {
+  line-height: 1.8;
+  margin: 0px;
+}
+
+h2 {
+
+  padding:0px;
+  padding-top: 0.4em;
+  font-size: 1.5em;
+  font-weight: normal !important;
+  margin: 0px;
+}
+
+.left-align {
+  text-align: left;
+}
+
+.item-footer ul li {
+  margin: 0.0em;
+  margin-bottom: 1.0em;
+}
+
+.footer-img{
+
+  margin-top: 1.0em;
+  margin-bottom: 0.0em;
+}
