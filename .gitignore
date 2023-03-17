@@ -129,4 +129,5 @@ dmypy.json
 .pyre/
 
 #sqllite db
-.sqlite3
+app.sqlite3
+
