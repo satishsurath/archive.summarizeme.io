@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h4 class="subtitle">
+  View the Entries in the Database
+</h4>
+
+  <table id="data" class="table table-striped">
+    <thead>
+      <tr>
+        <th>Id</th>
+        <th>Timestamp</th>
+        <th>Post Type</th>
+        <th>URL</th>  
+        <th>test2summarize</th>                            
+        <th>openAIsummary</th>          
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in entries %}
+        <tr>
+          <td>{{ entry.id }}</td>
+          <td>{{ entry.timestamp }}</td>
+          <td>{{ entry.posttype }}</td>
+          <td>{{ entry.url }}</td>
+          <td>{{ entry.test2summarize }}</td>
+          <td>{{ entry.openAIsummary }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+{% endblock %}
