@@ -62,4 +62,6 @@ h2 {
 }
 
 
-#more {display: none;}
+.more {display: none;}
+
+td, th { border-bottom: 1px solid }

@@ -10,7 +10,6 @@
       <tr>
         <th>Id</th>
         <th>Timestamp</th>
-        <th>Post Type</th>
         <th>URL</th>  
         <th>test2summarize</th>                            
         <th>openAIsummary</th>          
@@ -21,19 +20,29 @@
         <tr>
           <td>{{ entry.id }}</td>
           <td>{{ entry.timestamp }}</td>
-          <td>{{ entry.posttype }}</td>
-          <td>{{ entry.url }}</td>
+          <td>
+            {% if entry.posttype  != "0" %}   
+              {% if entry.url  == "0" %} 
+                Summary from Text
+              {% else %}
+                <a href="{{ entry.url}}" target="_blank">
+                  {{ entry.url[:15] }}...
+                </a>
+              {% endif %}
+            {% endif %}
+          </td>
           <td style="text-align: left;">
-              <p style="text-align: left;">
+              <p style="text-align: left;" data-id='{{entry.id}}' class="card">
                 {{ entry.test2summarize[:100] }}
-                <span id="dots">
+                <span class="dots">
                   ...
                 </span>
-                <span id="more">
+                <span class="more">
                   {{ entry.test2summarize[101:] }}
                 </span>
+                <button onclick="myFunction({{ entry.id }})" class="myBtn">Read more</button>
               </p>
-              <button onclick="myFunction()" id="myBtn">Read more</button>
+              
             </td>
           <td>
             <p style="text-align: left;">
@@ -52,10 +61,10 @@
     </tbody>
   </table>
   <script>
-function myFunction() {
-  var dots = document.getElementById("dots");
-  var moreText = document.getElementById("more");
-  var btnText = document.getElementById("myBtn");
+function myFunction(id) {
+  var dots = document.querySelector(`.card[data-id="${id}"] .dots`);
+  var moreText = document.querySelector(`.card[data-id="${id}"] .more`);
+  var btnText = document.querySelector(`.card[data-id="${id}"] .myBtn`);
 
   if (dots.style.display === "none") {
     dots.style.display = "inline";
