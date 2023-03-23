@@ -37,8 +37,13 @@
             </td>
           <td>
             <p style="text-align: left;">
-                {% for para in entry.openAIsummary.split('\n') %}
-                {{para}}<br>
+                {% for index, para in enumerate(entry.openAIsummary.split('\n')) %}
+                {% set number = index | int %}
+                  {% if number < 0 %} 
+                    {{para}}<br>
+                  {% else %}
+                    {{para}}<br>
+                  {% endif %}
                 {% endfor %}
             </p>  
           </td>

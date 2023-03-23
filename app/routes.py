@@ -21,6 +21,12 @@ from flask_migrate import Migrate
 #from datetime import datetime
 #db = SQLAlchemy(app)
 
+@app.context_processor
+def inject_enumerate():
+    return dict(enumerate=enumerate)
+
+
+
 from app.models import Entry_Post
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -90,8 +96,8 @@ def openAI_summarize(form_prompt):
     )
     print("\n",form_prompt)
     print("\n",response)
-    print("\n",response["choices"][0]["text"])
-    text_to_return = response["choices"][0]["text"]
+    print("\n",response["choices"][0]["text"][2:])
+    text_to_return = response["choices"][0]["text"][2:]
     #text_to_return = text_to_return.split('\n')
     print(text_to_return)
     return text_to_return
