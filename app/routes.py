@@ -1,7 +1,45 @@
-from flask import render_template
-from app import app, db
+import os
+from flask import render_template, request
+from app import app, db, login_manager
 from app.forms import SummarizeFromText, SummarizeFromURL
 from flask import render_template, flash, redirect, url_for
+
+
+#For Basic Authentication
+########## Begin ---------- Basic Authentication
+from flask_login import login_required, current_user, UserMixin
+from flask_login import login_user, logout_user, login_required
+
+#Define the Username and Password to access the Logs
+summarizeMeUser = os.getenv("summarizeMeUser") or "user1"
+summarizeMePassword = os.getenv("summarizeMePassword") or "pass1"
+
+users = {summarizeMeUser:{'pw':summarizeMePassword}}
+
+class User(UserMixin):
+  pass
+
+@login_manager.user_loader
+def user_loader(username):
+  if username not in users:
+    return
+
+  user = User()
+  user.id = username
+  return user
+
+@login_manager.request_loader
+def request_loader(request):
+  username = request.form.get('username')
+  if username not in users:
+    return
+  user = User()
+  user.id = username
+  user.is_authenticated = request.form['pw'] == users[username]['pw']
+  return user
+
+
+########## End ---------- Basic Authentication
 
 import json
 
@@ -17,10 +55,8 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Table, Column, Float, Integer, String, MetaData, ForeignKey
 from flask_migrate import Migrate
 
-#Used for Writing Timestamp to Database
-#from datetime import datetime
-#db = SQLAlchemy(app)
 
+#Used to inject the enumerate function into the templates
 @app.context_processor
 def inject_enumerate():
     return dict(enumerate=enumerate)
@@ -41,11 +77,27 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+  if request.method == 'POST':
+    username = request.form.get('username')
+    if request.form.get('pw') == users[username]['pw']:
+      user = User()
+      user.id = username
+      login_user(user)
+      return redirect(url_for('logs'))
+  return render_template('login.html')
 
-@app.route('/admin')
-def admin():
+@app.route('/logout')
+def logout():
+  logout_user()
+  return redirect(url_for('index'))
+
+@app.route('/logs')
+@login_required
+def logs():
     entries = Entry_Post.query.order_by(Entry_Post.id.desc())
-    return render_template('admin.html', entries=entries)
+    return render_template('logs.html', entries=entries)
 
 
 @app.route('/summarizeText', methods=['GET', 'POST'])
