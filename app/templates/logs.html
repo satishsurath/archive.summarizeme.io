@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h4 class="subtitle">
+  View the Entries in the Database      ~<a href="{{ url_for('logout') }}">Logout</a> ~
+</h4>
+<br>
+ 
+
+  <table id="data" class="table table-striped">
+    <thead>
+      <tr>
+        <th>Id</th>
+        <th>Timestamp</th>
+        <th>URL</th>  
+        <th>test2summarize</th>                            
+        <th>openAIsummary</th>          
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in entries %}
+        <tr>
+          <td>{{ entry.id }}</td>
+          <td>{{ entry.timestamp }}</td>
+          <td>
+            {% if entry.posttype  != "0" %}   
+              {% if entry.url  == "0" %} 
+                Summary from Text
+              {% else %}
+                <a href="{{ entry.url}}" target="_blank">
+                  {{ entry.url[:15] }}...
+                </a>
+              {% endif %}
+            {% endif %}
+          </td>
+          <td style="text-align: left;">
+              <p style="text-align: left;" data-id='{{entry.id}}' class="card">
+                {{ entry.test2summarize[:100] }}
+                <span class="dots">
+                  ...
+                </span>
+                <span class="more">
+                  {{ entry.test2summarize[101:] }}
+                </span>
+                <button onclick="myFunction({{ entry.id }})" class="myBtn">Read more</button>
+              </p>
+              
+            </td>
+          <td>
+            <p style="text-align: left;">
+                {% for index, para in enumerate(entry.openAIsummary.split('\n')) %}
+                {% set number = index | int %}
+                  {% if number < 0 %} 
+                    {{para}}<br>
+                  {% else %}
+                    {{para}}<br>
+                  {% endif %}
+                {% endfor %}
+            </p>  
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <script>
+function myFunction(id) {
+  var dots = document.querySelector(`.card[data-id="${id}"] .dots`);
+  var moreText = document.querySelector(`.card[data-id="${id}"] .more`);
+  var btnText = document.querySelector(`.card[data-id="${id}"] .myBtn`);
+
+  if (dots.style.display === "none") {
+    dots.style.display = "inline";
+    btnText.innerHTML = "Read more";
+    moreText.style.display = "none";
+  } else {
+    dots.style.display = "none";
+    btnText.innerHTML = "Read less";
+    moreText.style.display = "inline";
+  }
+}
+
+
+  </script>
+
+{% endblock %}
