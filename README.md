@@ -16,6 +16,11 @@ git clone git@github.com:satishsurath/summarize4me.git
 ```shell
 export OPENAI_API_KEY=[YOUR-OPENAI_API_KEY-HERE]
 ```
+- Setup your admin username and password to access the logs:
+```shell
+export summarizeMeUser=[YOUR ADMIN USERNAME HERE]
+export summarizeMePassword=[YOUR ADMIN PASSWORD HERE]
+```
 - Install all the Python dependencies in your environment:
 ```shell
 pip install -r requirements.txt
