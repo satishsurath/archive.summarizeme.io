@@ -46,3 +46,7 @@ flask run
 ### Features to be added:
 
 - Extract Text from a PDF file and Summarize it
+- Privacy Notice
+- Enable Sessions
+- SPAM Protection
+- Integration of Additional LLMs (by Google for example)
