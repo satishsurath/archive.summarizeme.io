@@ -96,8 +96,12 @@ def logout():
 @app.route('/logs')
 @login_required
 def logs():
-    entries = Entry_Post.query.order_by(Entry_Post.id.desc())
-    return render_template('logs.html', entries=entries)
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 5, type=int)
+    entries = Entry_Post.query.order_by(Entry_Post.id.desc()).paginate(page=page, per_page=per_page)
+    return render_template('logs.html', entries=entries)    
+    #entries = Entry_Post.query.order_by(Entry_Post.id.desc())
+    #return render_template('logs.html', entries=entries)
 
 
 @app.route('/summarizeText', methods=['GET', 'POST'])
