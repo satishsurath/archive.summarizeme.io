@@ -24,15 +24,18 @@
           <ul>
          <li> <a href="{{ url_for('index') }}"><img src="/static/Summarize4Me-Logo.png" height="40px" width="40px"></a></li>
          <li> <a href="{{ url_for('summarizeText') }}">Summarize Text</a></li> 
-         <li> <a href="{{ url_for('summarizeURL') }}">Summarize URL</a></li> 
+         <li> <a href="{{ url_for('summarizeURL') }}">Summarize URL</a></li>
          <li> <a href="{{ url_for('logs') }}">Logs</a></li> 
             {% if current_user.is_authenticated %}
+              <li> <a href="{{ url_for('openAI_debug') }}">OpenAI Debug</a></li> 
               <li><a href="{{ url_for('logout') }}">Logout</a></li>
             {% endif %}         
         </ul>
       </div>  
       <div class="item">
-        {% block content %}{% endblock %}
+        {% block content %}
+        
+        {% endblock %}
       </div>
       <div class="item-footer">
         <ul>

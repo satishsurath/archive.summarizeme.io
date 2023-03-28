@@ -15,12 +15,17 @@
         {% if openAI_summary %}
             <div class="left-align">
             <h2>Text to Summarize:</h2> 
-            <p>{{ test2summarize }}</p>
+            <p>
+                {% for para_test2summarize in test2summarize %}
+                    {{para_test2summarize}}
+                {% endfor %}
+            </p>    
             <h2>Summary:</h2>
-            <p>{% for para in openAI_summary %}
-                    {{para}}<br>
-                {% endfor %}</p>
-            </div>
+            <p>
+                {% for para_summary in openAI_summary %}
+                    {{para_summary}}<br>
+                {% endfor %}
+            </p>
         {% endif %}
     </form>
 {% endblock %}

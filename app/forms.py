@@ -13,3 +13,8 @@ class SummarizeFromText(FlaskForm):
 class SummarizeFromURL(FlaskForm):
     summarize = URLField('Paste / type the text to summarize below:')
     submit = SubmitField('Summarize')
+
+class openAI_debug_form(FlaskForm):
+    openAI_debug_form_key = StringField('Paste your OpenAI API Key (will not be saved)')
+    openAI_debug_form_prompt = StringField('OpenAI Input:', widget=TextArea())
+    submit = SubmitField('Submit')    

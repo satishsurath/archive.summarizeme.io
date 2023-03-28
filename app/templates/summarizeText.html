@@ -6,7 +6,8 @@
         {{ form.hidden_tag() }}
         <p>
             {{ form.summarize.label }}<br>
-            {{ form.summarize(cols=50, rows=10) }}<br>
+            <small><em>{{ form.summarize(cols=50, rows=10, class_='form-control', placeholder='Enter text here...', onkeyup="document.getElementById('charNum').innerHTML = this.value.length") }}</em></small><br>
+            <span id="charNum">0</span> characters entered.
             {% for error in form.summarize.errors %}
             <span style="color: red;">[{{ error }}]</span>
             {% endfor %}
@@ -15,11 +16,19 @@
         {% if openAI_summary %}
             <div class="left-align">
             <h2>Text to Summarize:</h2> 
-            <p>{{ test2summarize }}</p>
+
+            <p>
+                {% for para_test2summarize in test2summarize %}
+                    {{para_test2summarize}}
+                {% endfor %}
+            </p>            
+            
             <h2>Summary:</h2>
-            <p>{% for para in openAI_summary %}
-                    {{para}}<br>
-                {% endfor %}</p>
+            <p>
+                {% for para_summary in openAI_summary %}
+                    {{para_summary}}<br>
+                {% endfor %}
+            </p>
             </div>
         {% endif %}
     </form>
