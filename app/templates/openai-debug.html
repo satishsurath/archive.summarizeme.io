@@ -28,11 +28,9 @@
                 {{ test2summarize|nl2br|safe }}<br>
             </p>
             <h2>Summary:</h2>
-            <div style="white-space: pre-wrap;">{{ just_summary|nl2br|safe }}</div>                     
+            <p style="white-space: pre-wrap;">{{ just_summary|nl2br|safe }}</p>                     
             <h2>JSON:</h2>
-            <div style="white-space: pre-wrap;">
-            {{ openAI_summary|nl2br|safe }}
-            </div>
+            <pre style="white-space: pre-wrap;" class="prettyprint">{{ openAI_summary|nl2br|safe }}</pre>
             </div>
         {% endif %}
     </form>
