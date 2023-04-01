@@ -2,16 +2,18 @@
 
 {% block content %}
     <h1>Summarize From URL</h1>
-    <form action="" method="post" novalidate>
+    <form action="" method="post" onsubmit="showProcessing()" novalidate>
         {{ form.hidden_tag() }}
         <p>
             {{ form.summarize.label }}<br>
-            {{ form.summarize() }}<br>
+            {{ form.summarize(class_='form-control',placeholder='Enter webpage URL...') }}<br>
             {% for error in form.summarize.errors %}
             <span style="color: red;">[{{ error }}]</span>
             {% endfor %}
         </p>
+        <br>
         <p>{{ form.submit() }}</p>
+        <div id="processing" style="display:none; font-weight:bold;">Processing...</div>
         {% if openAI_summary %}
             <div class="left-align">
                 <details>
@@ -53,4 +55,24 @@
             </details>
         {% endif %}
     </form>
+    <script>
+        var interval;
+        var dotCount = 0;
+
+        function showProcessing() {
+            document.getElementById('processing').style.display = 'block';
+            animateDots();
+        }
+
+        function animateDots() {
+            interval = setInterval(function() {
+                var dots = '';
+                for (var i = 0; i < dotCount; i++) {
+                    dots += '.';
+                }
+                document.getElementById('dots').innerText = dots;
+                dotCount = (dotCount + 1) % 4;
+            }, 500);
+        }
+    </script>
 {% endblock %}

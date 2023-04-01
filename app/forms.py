@@ -3,20 +3,20 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.widgets import TextArea
 from wtforms.fields import URLField
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, URL
 
 
 class SummarizeFromText(FlaskForm):
-    summarize = StringField('Paste / type the text to summarize below:', widget=TextArea())
+    summarize = StringField('Paste / type the text to summarize below:', widget=TextArea(), validators=[DataRequired()])
     submit = SubmitField('Summarize')
 
 class SummarizeFromURL(FlaskForm):
-    summarize = URLField('Paste / type the URL of the webpage to summarize below:')
+    summarize = URLField('Paste / type the URL of the webpage to summarize below:', validators=[DataRequired(), URL(message='Please enter a valid URL.')])
     submit = SubmitField('Summarize')
 
 class openAI_debug_form(FlaskForm):
     openAI_debug_form_key = StringField('Paste your OpenAI API Key (will not be saved)')
-    openAI_debug_form_prompt = StringField('OpenAI Input:', widget=TextArea())
+    openAI_debug_form_prompt = StringField('OpenAI Input:', widget=TextArea(), validators=[DataRequired()])
     submit = SubmitField('Submit')   
 
 #form to delete the entry

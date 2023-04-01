@@ -1,11 +1,43 @@
-
 body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   display: flex;
   justify-content: center;
+  background-color: #f2f3f7;
+  color: #10141d;
+  --text-color: #10141d;
+  --bkg-color: #f2f3f7;
+  --form-bkg-color: #edf1fb;
+  transition: background-color 0.8s, color 0.8s, border-color 0.8s;
 }
+
+body.dark-mode {
+  background-color: #10141d;
+  color: #edf1fb;
+  --text-color: #edf1fb;
+  --bkg-color: #10141d;
+  --form-bkg-color: #1c3365;
+  transition: background-color 0.8s, color 0.8s, border-color 0.8s;
+
+}
+
+.nav-links a {
+  color: #1c3365;
+  text-decoration: none;
+}
+
+.nav-links a:hover {
+  text-decoration: underline;
+}
+
+body.dark-mode .nav-links a,
+body.dark-mode .nav-links a:hover {
+  color: #edf1fb;
+}
+
+/* Rest of your CSS */
+
 
 .container {
   display: flex;
@@ -65,6 +97,40 @@ h2 {
   margin-bottom: 2.0rem;
 }
 
+
+
 .more {display: none;}
 
 td, th { border-bottom: 1px solid }
+
+
+.form-control {
+  background-color: var(--form-bkg-color);
+  color: var(--text-color);
+  border: 1px solid var(--text-color);
+  transition: background-color 0.4s, color 0.4s, border-color 0.4s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--text-color);
+}
+
+input[type="submit"] {
+  background-color: var(--form-bkg-color);
+  color: var(--text-color);
+  border: 1px solid var(--text-color);
+  cursor: pointer;
+  padding: 8px 16px;
+  transition: background-color 0.4s, color 0.4s, border-color 0.4s;
+  border-radius: 3px;
+}
+
+input[type="submit"]:hover {
+  background-color: var(--bkg-color);
+  color: var(--text-color);
+}
+
+.form-control, .btn {
+  border-radius: 3px;
+}

@@ -17,9 +17,69 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link rel="stylesheet" type="text/css" href="/static/style.css">
       <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Cabin">
-      {% if current_user.is_authenticated %}
       <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
-      {% endif %} 
+      <style>
+        /* Add this style block to include the toggle switch CSS */
+        .switch {
+          position: relative;
+          display: inline-block;
+          width: 30px; /* 50% of the original width */
+          height: 17px; /* 50% of the original height */
+        }
+    
+        .switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+    
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #ccc;
+          -webkit-transition: .4s;
+          transition: .4s;
+        }
+    
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 13px; /* 50% of the original height */
+          width: 13px; /* 50% of the original width */
+          left: 2px; /* 50% of the original left */
+          bottom: 2px; /* 50% of the original bottom */
+          background-color: white;
+          -webkit-transition: .4s;
+          transition: .4s;
+        }
+    
+        input:checked + .slider {
+          background-color: #2196F3;
+        }
+    
+        input:focus + .slider {
+          box-shadow: 0 0 1px #2196F3;
+        }
+    
+        input:checked + .slider:before {
+          -webkit-transform: translateX(13px); /* 50% of the original translateX value */
+          -ms-transform: translateX(13px); /* 50% of the original translateX value */
+          transform: translateX(13px); /* 50% of the original translateX value */
+        }
+    
+        .slider.round {
+          border-radius: 17px; /* 50% of the original border-radius */
+        }
+    
+        .slider.round:before {
+          border-radius: 50%;
+        }
+    </style>
+    
     </head>
     <body>
       <div class="container">
@@ -27,12 +87,20 @@
           <ul>
          <li> <a href="{{ url_for('index') }}"><img src="/static/SummarizeMe_transparent_logov3.png" height="80px"></a></li>
          <li class="nav-links"> <a href="{{ url_for('summarizeText') }}">Summarize Text</a></li> 
-         <li> <a href="{{ url_for('summarizeURL') }}">Summarize URL</a></li>
-         <li> <a href="{{ url_for('logs') }}">Logs</a></li> 
+         <li class="nav-links"> <a href="{{ url_for('summarizeURL') }}">Summarize URL</a></li>
+         <li class="nav-links"> <a href="{{ url_for('logs') }}">Logs</a></li> 
             {% if current_user.is_authenticated %}
-              <li> <a href="{{ url_for('openAI_debug') }}">OpenAI Debug</a></li> 
-              <li><a href="{{ url_for('logout') }}">Logout</a></li>
-            {% endif %}         
+              <li class="nav-links"> <a href="{{ url_for('openAI_debug') }}">OpenAI Debug</a></li> 
+              <li class="nav-links"><a href="{{ url_for('logout') }}">Logout</a></li>
+            {% endif %}   
+            <li class="nav-links">
+              <!-- Add the toggle switch element -->
+              <label class="switch">
+                <input type="checkbox" id="toggle-theme" onclick="toggleTheme()">
+                <span class="slider round"></span>
+              </label>
+            </li>
+      
         </ul>
       </div>  
       <div class="item">
@@ -46,5 +114,32 @@
         </ul>
     </div>  
       </div>
+      <script>
+// Function to handle theme toggle and save preference
+const toggleTheme = () => {
+  const body = document.body;
+  const toggleSwitch = document.getElementById('toggle-theme');
+
+  // Toggle the "dark-mode" class on the body element
+  body.classList.toggle('dark-mode');
+
+  // Save the theme preference in local storage
+  localStorage.setItem('theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
+}
+
+// Apply saved theme and set the toggle switch state on page load
+document.addEventListener('DOMContentLoaded', () => {
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  const toggleSwitch = document.getElementById('toggle-theme');
+
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark-mode');
+    toggleSwitch.checked = true;
+  } else {
+    toggleSwitch.checked = false;
+  }
+});
+
+      </script>
     </body>
 </html>

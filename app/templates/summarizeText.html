@@ -2,7 +2,7 @@
 
 {% block content %}
     <h1>Summarize From Text</h1>
-    <form action="" method="post" novalidate>
+    <form action="" method="post" onsubmit="showProcessing()" novalidate>
         {{ form.hidden_tag() }}
         <p>
             {{ form.summarize.label }}<br>
@@ -13,6 +13,7 @@
             {% endfor %}
         </p>
         <p>{{ form.submit() }}</p>
+        <div id="processing" style="display:none; font-weight:bold;">Processing<span id="dots"></span></div>
         {% if openAI_summary %}
             <div class="left-align">
                 <details>
@@ -56,4 +57,24 @@
             </div>
         {% endif %}
     </form>
+    <script>
+        var interval;
+        var dotCount = 0;
+
+        function showProcessing() {
+            document.getElementById('processing').style.display = 'block';
+            animateDots();
+        }
+
+        function animateDots() {
+            interval = setInterval(function() {
+                var dots = '';
+                for (var i = 0; i < dotCount; i++) {
+                    dots += '.';
+                }
+                document.getElementById('dots').innerText = dots;
+                dotCount = (dotCount + 1) % 4;
+            }, 500);
+        }
+    </script>
 {% endblock %}
