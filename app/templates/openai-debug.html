@@ -23,10 +23,12 @@
         <p>{{ form.submit() }}</p>
         {% if openAI_summary %}
             <div class="left-align">
-            <h2>Prompt:</h2> 
-            <p>
-                {{ test2summarize|nl2br|safe }}<br>
-            </p>
+                <details>
+                    <summary><b>Prompt:</b></summary>
+                    <p>
+                        {{ test2summarize|nl2br|safe }}<br>
+                    </p>
+                </details>       
             <h2>Summary:</h2>
             <p style="white-space: pre-wrap;">{{ just_summary|nl2br|safe }}</p>                     
             <h2>JSON:</h2>

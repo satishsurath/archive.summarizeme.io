@@ -15,6 +15,7 @@ from flask_migrate import Migrate
 from flask_login import login_required, current_user, UserMixin
 from flask_login import login_user, logout_user, login_required
 
+# -------------------- Utility functions --------------------
 
 #This is the function that will be called to summarize the text
 def num_tokens_from_string(prompt):
@@ -27,8 +28,24 @@ def trim_text_to_tokens(text, max_tokens):
     encoding = tiktoken.get_encoding("cl100k_base")
     return encoding.decode(encoding.encode(text)[:max_tokens])
 
-#For Basic Authentication
-########## Begin ---------- Basic Authentication
+#calculate average senence length in tokens
+def avg_sentence_length(text):
+    encoding = tiktoken.get_encoding("cl100k_base")
+    tokens = encoding.encode(text)
+    return len(tokens)/len(text.split('.')) 
+
+#Used to inject the enumerate function into the templates
+@app.context_processor
+def inject_enumerate():
+    return dict(enumerate=enumerate)
+
+# Custom Jinja filter to replace newline characters with <br> tags
+def nl2br(value):
+    return value.replace('\n', '<br>')
+
+
+# -------------------- Basic Authentication --------------------
+
 
 #Define the Username and Password to access the Logs
 summarizeMeUser = os.getenv("summarizeMeUser") or "user1"
@@ -58,38 +75,28 @@ def request_loader(request):
   user.is_authenticated = request.form['pw'] == users[username]['pw']
   return user
 
-########## End ---------- Basic Authentication
 
 
-
-# Custom Jinja filter to replace newline characters with <br> tags
-def nl2br(value):
-    return value.replace('\n', '<br>')
-
+# -------------------- Flask app configurations --------------------
 app.jinja_env.filters['nl2br'] = nl2br
-
-
-
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Defining and initializing Global Variables
+# -------------------- Global variables --------------------
+
 openAI_summary = "" 
 test2summarize = ""
 url = ""
+global_is_trimmed = False
+global_form_prompt = ""
 
 
-#Used to inject the enumerate function into the templates
-@app.context_processor
-def inject_enumerate():
-    return dict(enumerate=enumerate)
 
 
+# -------------------- Routes --------------------
 @app.route('/')
 @app.route('/index')
 def index():
     return render_template('index.html')
-
-
 
 
 @app.route('/summarizeText', methods=['GET', 'POST'])
@@ -97,18 +104,33 @@ def summarizeText():
     form = SummarizeFromText()
     global openAI_summary
     global test2summarize
+    global url
+    url = ""
+    global global_is_trimmed
+    global global_form_prompt
     if form.validate_on_submit():
-      openAI_summary = openAI_summarize("Summarize the below text in a few short bullet points: \n" + form.summarize.data)
+      #openAI_summary = openAI_summarize("Summarize the below text in a few short bullet points: \n" + form.summarize.data)
+      openAI_summary, global_is_trimmed, global_form_prompt = openAI_summarize("Summarize the below text in a few short bullet points: \n\n" + test2summarize)
       test2summarize = form.summarize.data
       return redirect(url_for('summarizeText'))
     if (openAI_summary):
       write_to_db(0,"0",test2summarize,openAI_summary["choices"][0]['message']['content'])
-      return render_template('summarizeText.html', title='Summarize From Text', form=form,test2summarize=test2summarize.split('\n'), openAI_summary=openAI_summary["choices"][0]['message']['content'].split('\n'))
+      # Calculate token count and average tokens per sentence
+      token_count = num_tokens_from_string(test2summarize)
+      avg_tokens_per_sentence = avg_sentence_length(test2summarize) 
+      openAI_summary_str = json.dumps(openAI_summary, indent=4)     
+      return render_template(
+        'summarizeText.html', 
+        title='Summarize From Text', 
+        form=form,
+        test2summarize=test2summarize.split('\n'), 
+        openAI_summary=openAI_summary["choices"][0]['message']['content'].split('\n'),  
+        token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence, 
+        openAI_json=openAI_summary_str, 
+        is_trimmed=global_is_trimmed, 
+        form_prompt_nerds=global_form_prompt)
     else:
         return render_template('summarizeText.html', title='Summarize From Text', form=form)
-
-
-
 
 
 @app.route('/summarizeURL', methods=['GET', 'POST'])
@@ -117,19 +139,42 @@ def summarizeURL():
     global openAI_summary
     global test2summarize
     global url
+    global global_is_trimmed
+    global global_form_prompt
     if form.validate_on_submit():
       newconfig = use_config()
       newconfig.set("DEFAULT", "EXTRACTION_TIMEOUT", "0")
       downloaded = trafilatura.fetch_url(form.summarize.data)
       url = form.summarize.data
       test2summarize = extract(downloaded, config=newconfig)
-      openAI_summary = openAI_summarize("Summarize the below text in a few short bullet points: \n\n" + test2summarize)
+      #openAI_summary = openAI_summarize("Summarize the below text in a few short bullet points: \n\n" + test2summarize)
+      openAI_summary, global_is_trimmed, global_form_prompt = openAI_summarize("Summarize the below text in a few short bullet points: \n\n" + test2summarize)
       return redirect(url_for('summarizeURL'))
     if (openAI_summary):
       write_to_db(1,url,test2summarize,openAI_summary["choices"][0]['message']['content'])
-      return render_template('summarizeURL.html', title='Summarize From URL', form=form,test2summarize=test2summarize.split('\n'), openAI_summary=openAI_summary["choices"][0]['message']['content'].split('\n'))
+      # Calculate token count and average tokens per sentence
+      token_count = num_tokens_from_string(test2summarize)
+      avg_tokens_per_sentence = avg_sentence_length(test2summarize)
+      openAI_summary_str = json.dumps(openAI_summary, indent=4)
+      #return render_template('summarizeURL.html', title='Summarize From URL', form=form, test2summarize=test2summarize.split('\n'), openAI_summary=openAI_summary["choices"][0]['message']['content'].split('\n'), token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence, openAI_json=openAI_summary_str, is_trimmed=global_is_trimmed, form_prompt_nerds=global_form_prompt)
+      return render_template(
+        'summarizeURL.html',
+        title='Summarize From URL',
+        form=form,
+        test2summarize=test2summarize.split('\n'),
+        openAI_summary=openAI_summary["choices"][0]['message']['content'].split('\n'),
+        token_count=token_count,
+        avg_tokens_per_sentence=avg_tokens_per_sentence,
+        openAI_json=openAI_summary_str,
+        is_trimmed=global_is_trimmed,
+        form_prompt_nerds=global_form_prompt
+      )
     else:
-        return render_template('summarizeURL.html', title='Summarize From URL', form=form)
+        return render_template(
+          'summarizeURL.html',
+          title='Summarize From URL',
+          form=form
+        )
 
 
 
@@ -138,7 +183,7 @@ def summarizeURL():
 def login():
   if request.method == 'POST':
     username = request.form.get('username')
-    if request.form.get('pw') == users[username]['pw']:
+    if request.form.get('pw') == users.get(username, {}).get('pw'):
       user = User()
       user.id = username
       login_user(user)
@@ -157,26 +202,20 @@ def logs():
     per_page = request.args.get('per_page', 5, type=int)
     entries = Entry_Post.query.order_by(Entry_Post.id.desc()).paginate(page=page, per_page=per_page)
     return render_template('logs.html', entries=entries)    
-    #entries = Entry_Post.query.order_by(Entry_Post.id.desc())
-    #return render_template('logs.html', entries=entries)
 
 @app.route('/openAI-debug', methods=['GET', 'POST'])
 @login_required
 def openAI_debug():
-    #form = SummarizeFromText()
     form = openAI_debug_form()
     global openAI_summary
     global test2summarize
     if form.validate_on_submit():
-      #openAI_summary = openAI_summarize(form.summarize.data)
-      #openAI_summary = openAI_summarize(form..data,form.openAI_prompt.data)
       openai_api_form_prompt = form.openAI_debug_form_prompt.data
       openai_api_form_key = form.openAI_debug_form_key.data
       test2summarize = openai_api_form_prompt
       openAI_summary = openAI_summarize_debug(openai_api_form_key, openai_api_form_prompt)
       return redirect(url_for('openAI_debug'))
     if (openAI_summary):
-      #write_to_db(-1,"DEBUG",test2summarize,openAI_summary)
       openAI_summary_str = json.dumps(openAI_summary, indent=4)
       return render_template('openai-debug.html', title='openAI-debug', form=form,openai_key = os.getenv("OPENAI_API_KEY"), test2summarize=test2summarize, openAI_summary=openAI_summary_str, just_summary = openAI_summary["choices"][0]['message']['content'] )
     else:
@@ -189,9 +228,11 @@ def openAI_summarize(form_prompt):
     # Count tokens in the form_prompt
     token_count = num_tokens_from_string(form_prompt)
     max_tokens = 3500
+    is_trimmed = False
     # Trim the form_prompt if the token count exceeds the model's maximum limit
     if token_count > max_tokens:
         form_prompt = trim_text_to_tokens(form_prompt, max_tokens)
+        is_trimmed = True
     message = {"role": "user", "content": form_prompt}
     print("message: " + str(message))
     response = openai.ChatCompletion.create(
@@ -203,11 +244,7 @@ def openAI_summarize(form_prompt):
       frequency_penalty=0.0,
       presence_penalty=1
     )
-    #fuction to print all the keys in the json response
-    #print(json.dumps(response, indent=4)) 
-    #text_to_return = response["choices"][0]['message']['content']
-    #print(text_to_return)
-    return response
+    return response, is_trimmed, form_prompt
 
 def openAI_summarize_debug(form_openai_key, form_prompt):
     openai.api_key = form_openai_key
