@@ -119,7 +119,7 @@ def summarizeText():
     if not content_written:
       if form.validate_on_submit():
         test2summarize = form.summarize.data
-        test2summarize_hash = hashlib.sha256(test2summarizedb.encode('utf-8')).hexdigest()
+        test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
         if check_if_hash_exists(test2summarize_hash):
           openAI_summary = get_summary_from_hash(test2summarize_hash)
           global_is_trimmed = False
@@ -129,23 +129,42 @@ def summarizeText():
           openAI_summary, global_is_trimmed, global_form_prompt, global_number_of_chunks = openAI_summarize_chunk(test2summarize)
         return redirect(url_for('summarizeText'))
       if (openAI_summary):
-        write_to_db(0,"0",test2summarize,openAI_summary["choices"][0]['message']['content'])
-        # Calculate token count and average tokens per sentence
-        token_count = num_tokens_from_string(test2summarize)
-        avg_tokens_per_sentence = avg_sentence_length(test2summarize) 
-        openAI_summary_str = json.dumps(openAI_summary, indent=4)     
-        return render_template(
-          'summarizeText.html', 
-          title='Summarize From Text', 
-          form=form,
-          test2summarize=test2summarize.split('\n'), 
-          openAI_summary=openAI_summary["choices"][0]['message']['content'].split('\n'),  
-          token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence, 
-          openAI_json=openAI_summary_str, 
-          is_trimmed=global_is_trimmed, 
-          form_prompt_nerds=global_form_prompt,
-          number_of_chunks=global_number_of_chunks
-        )
+        test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
+        if not check_if_hash_exists(test2summarize_hash):
+          write_to_db(0,"0",test2summarize,openAI_summary["choices"][0]['message']['content'])          
+          # Calculate token count and average tokens per sentence
+          token_count = num_tokens_from_string(test2summarize)
+          avg_tokens_per_sentence = avg_sentence_length(test2summarize) 
+          openAI_summary_str = json.dumps(openAI_summary, indent=4)     
+          return render_template(
+            'summarizeText.html', 
+            title='Summarize From Text', 
+            form=form,
+            test2summarize=test2summarize.split('\n'), 
+            openAI_summary=openAI_summary["choices"][0]['message']['content'].split('\n'),  
+            token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence, 
+            openAI_json=openAI_summary_str, 
+            is_trimmed=global_is_trimmed, 
+            form_prompt_nerds=global_form_prompt,
+            number_of_chunks=global_number_of_chunks
+          )
+        else:
+          # Calculate token count and average tokens per sentence
+          token_count = num_tokens_from_string(test2summarize)
+          avg_tokens_per_sentence = avg_sentence_length(test2summarize) 
+          openAI_summary_str = "Retrived from Database"    
+          return render_template(
+            'summarizeText.html', 
+            title='Summarize From Text', 
+            form=form,
+            test2summarize=test2summarize.split('\n'), 
+            openAI_summary=openAI_summary.split('\n'),  
+            token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence, 
+            openAI_json=openAI_summary_str, 
+            is_trimmed=global_is_trimmed, 
+            form_prompt_nerds=global_form_prompt,
+            number_of_chunks=global_number_of_chunks
+          )
       else:
         content_written = False
         return render_template('summarizeText.html', title='Summarize From Text', form=form)
@@ -171,7 +190,7 @@ def summarizeURL():
         downloaded = trafilatura.fetch_url(form.summarize.data)
         url = form.summarize.data
         test2summarize = extract(downloaded, config=newconfig)
-        test2summarize_hash = hashlib.sha256(test2summarizedb.encode('utf-8')).hexdigest()
+        test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
         if check_if_hash_exists(test2summarize_hash):
           openAI_summary = get_summary_from_hash(test2summarize_hash)
           global_is_trimmed = False
@@ -181,24 +200,44 @@ def summarizeURL():
           openAI_summary, global_is_trimmed, global_form_prompt, global_number_of_chunks = openAI_summarize_chunk(test2summarize)
         return redirect(url_for('summarizeURL'))
       if (openAI_summary):
-        write_to_db(1,url,test2summarize,openAI_summary["choices"][0]['message']['content'])
-        # Calculate token count and average tokens per sentence
-        token_count = num_tokens_from_string(test2summarize)
-        avg_tokens_per_sentence = avg_sentence_length(test2summarize)
-        openAI_summary_str = json.dumps(openAI_summary, indent=4)
-        return render_template(
-          'summarizeURL.html',
-          title='Summarize From URL',
-          form=form,
-          test2summarize=test2summarize.split('\n'),
-          openAI_summary=openAI_summary["choices"][0]['message']['content'].split('\n'),
-          token_count=token_count,
-          avg_tokens_per_sentence=avg_tokens_per_sentence,
-          openAI_json=openAI_summary_str,
-          is_trimmed=global_is_trimmed,
-          form_prompt_nerds=global_form_prompt,
-          number_of_chunks=global_number_of_chunks
-        )
+        test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
+        if not check_if_hash_exists(test2summarize_hash):
+          write_to_db(1,url,test2summarize,openAI_summary["choices"][0]['message']['content'])
+          # Calculate token count and average tokens per sentence
+          token_count = num_tokens_from_string(test2summarize)
+          avg_tokens_per_sentence = avg_sentence_length(test2summarize)
+          openAI_summary_str = json.dumps(openAI_summary, indent=4)
+          return render_template(
+            'summarizeURL.html',
+            title='Summarize From URL',
+            form=form,
+            test2summarize=test2summarize.split('\n'),
+            openAI_summary=openAI_summary["choices"][0]['message']['content'].split('\n'),
+            token_count=token_count,
+            avg_tokens_per_sentence=avg_tokens_per_sentence,
+            openAI_json=openAI_summary_str,
+            is_trimmed=global_is_trimmed,
+            form_prompt_nerds=global_form_prompt,
+            number_of_chunks=global_number_of_chunks
+          )
+        else:
+          # Calculate token count and average tokens per sentence
+          token_count = num_tokens_from_string(test2summarize)
+          avg_tokens_per_sentence = avg_sentence_length(test2summarize)
+          openAI_summary_str = "Retrived from Database"
+          return render_template(
+            'summarizeURL.html',
+            title='Summarize From URL',
+            form=form,
+            test2summarize=test2summarize.split('\n'),
+            openAI_summary=openAI_summary.split('\n'),
+            token_count=token_count,
+            avg_tokens_per_sentence=avg_tokens_per_sentence,
+            openAI_json=openAI_summary_str,
+            is_trimmed=global_is_trimmed,
+            form_prompt_nerds=global_form_prompt,
+            number_of_chunks=global_number_of_chunks
+          )
       else:
         content_written = False
         return render_template('summarizeURL.html', title='Summarize From URL', form=form)
