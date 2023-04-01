@@ -6,7 +6,7 @@
         {{ form.hidden_tag() }}
         <p>
             {{ form.openAI_debug_form_key.label }}<br>
-            {{ form.openAI_debug_form_key(value=openai_key) }}<br>
+            {{ form.openAI_debug_form_key(value=openai_key,class_='form-control') }}<br>
 
             {% for error in form.openAI_debug_form_key.errors %}
             <span style="color: red;">[{{ error }}]</span>
