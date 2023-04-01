@@ -131,3 +131,6 @@ dmypy.json
 #sqllite db
 app.sqlite3
 
+#ignoriing mac files
+**/.DS_Store
+
