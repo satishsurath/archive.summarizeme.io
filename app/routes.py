@@ -3,6 +3,9 @@ import openai
 import json
 import trafilatura
 import tiktoken
+import nltk
+nltk.download('punkt')
+from nltk.tokenize import sent_tokenize
 from app import app, db, login_manager
 from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form
 from app.models import Entry_Post
@@ -28,7 +31,7 @@ def trim_text_to_tokens(text, max_tokens):
     encoding = tiktoken.get_encoding("cl100k_base")
     return encoding.decode(encoding.encode(text)[:max_tokens])
 
-#calculate average senence length in tokens
+#calculate average sentence length in tokens
 def avg_sentence_length(text):
     encoding = tiktoken.get_encoding("cl100k_base")
     tokens = encoding.encode(text)
@@ -88,7 +91,8 @@ test2summarize = ""
 url = ""
 global_is_trimmed = False
 global_form_prompt = ""
-
+global_prompt = "Summarize the below text in a few short bullet points: \n\n"
+global_number_of_chunks = 0
 
 
 
@@ -108,10 +112,11 @@ def summarizeText():
     url = ""
     global global_is_trimmed
     global global_form_prompt
+    global global_prompt
+    global global_number_of_chunks
     if form.validate_on_submit():
-      #openAI_summary = openAI_summarize("Summarize the below text in a few short bullet points: \n" + form.summarize.data)
-      openAI_summary, global_is_trimmed, global_form_prompt = openAI_summarize("Summarize the below text in a few short bullet points: \n\n" + test2summarize)
       test2summarize = form.summarize.data
+      openAI_summary, global_is_trimmed, global_form_prompt, global_number_of_chunks = openAI_summarize_chunk(test2summarize)
       return redirect(url_for('summarizeText'))
     if (openAI_summary):
       write_to_db(0,"0",test2summarize,openAI_summary["choices"][0]['message']['content'])
@@ -128,7 +133,9 @@ def summarizeText():
         token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence, 
         openAI_json=openAI_summary_str, 
         is_trimmed=global_is_trimmed, 
-        form_prompt_nerds=global_form_prompt)
+        form_prompt_nerds=global_form_prompt,
+        number_of_chunks=global_number_of_chunks
+      )
     else:
         return render_template('summarizeText.html', title='Summarize From Text', form=form)
 
@@ -141,14 +148,14 @@ def summarizeURL():
     global url
     global global_is_trimmed
     global global_form_prompt
+    global global_number_of_chunks
     if form.validate_on_submit():
       newconfig = use_config()
       newconfig.set("DEFAULT", "EXTRACTION_TIMEOUT", "0")
       downloaded = trafilatura.fetch_url(form.summarize.data)
       url = form.summarize.data
       test2summarize = extract(downloaded, config=newconfig)
-      #openAI_summary = openAI_summarize("Summarize the below text in a few short bullet points: \n\n" + test2summarize)
-      openAI_summary, global_is_trimmed, global_form_prompt = openAI_summarize("Summarize the below text in a few short bullet points: \n\n" + test2summarize)
+      openAI_summary, global_is_trimmed, global_form_prompt, global_number_of_chunks = openAI_summarize_chunk(test2summarize)
       return redirect(url_for('summarizeURL'))
     if (openAI_summary):
       write_to_db(1,url,test2summarize,openAI_summary["choices"][0]['message']['content'])
@@ -156,7 +163,6 @@ def summarizeURL():
       token_count = num_tokens_from_string(test2summarize)
       avg_tokens_per_sentence = avg_sentence_length(test2summarize)
       openAI_summary_str = json.dumps(openAI_summary, indent=4)
-      #return render_template('summarizeURL.html', title='Summarize From URL', form=form, test2summarize=test2summarize.split('\n'), openAI_summary=openAI_summary["choices"][0]['message']['content'].split('\n'), token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence, openAI_json=openAI_summary_str, is_trimmed=global_is_trimmed, form_prompt_nerds=global_form_prompt)
       return render_template(
         'summarizeURL.html',
         title='Summarize From URL',
@@ -167,7 +173,8 @@ def summarizeURL():
         avg_tokens_per_sentence=avg_tokens_per_sentence,
         openAI_json=openAI_summary_str,
         is_trimmed=global_is_trimmed,
-        form_prompt_nerds=global_form_prompt
+        form_prompt_nerds=global_form_prompt,
+        number_of_chunks=global_number_of_chunks
       )
     else:
         return render_template(
@@ -222,29 +229,7 @@ def openAI_debug():
         return render_template('openai-debug.html', title='openAI-debug', form=form, openai_key = os.getenv("OPENAI_API_KEY"))
 
 
-# Functions to call the OpenAI API
-def openAI_summarize(form_prompt):
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-    # Count tokens in the form_prompt
-    token_count = num_tokens_from_string(form_prompt)
-    max_tokens = 3500
-    is_trimmed = False
-    # Trim the form_prompt if the token count exceeds the model's maximum limit
-    if token_count > max_tokens:
-        form_prompt = trim_text_to_tokens(form_prompt, max_tokens)
-        is_trimmed = True
-    message = {"role": "user", "content": form_prompt}
-    print("message: " + str(message))
-    response = openai.ChatCompletion.create(
-      model="gpt-3.5-turbo",
-      messages=[message],#[{"role": "user", "content": form_prompt}],
-      temperature=0.7,
-      max_tokens=500,
-      top_p=1.0,
-      frequency_penalty=0.0,
-      presence_penalty=1
-    )
-    return response, is_trimmed, form_prompt
+
 
 def openAI_summarize_debug(form_openai_key, form_prompt):
     openai.api_key = form_openai_key
@@ -260,7 +245,58 @@ def openAI_summarize_debug(form_openai_key, form_prompt):
       )
     print(json.dumps(response, indent=4)) 
     return response
-
+# Functions to call the OpenAI API
+def openAI_summarize_chunk(form_prompt):
+    # Count tokens in the form_prompt
+    token_count = num_tokens_from_string(form_prompt)
+    max_tokens = 3500
+    is_trimmed = False
+    # Trim the form_prompt if the token count exceeds the model's maximum limit
+    if token_count > max_tokens:
+        #print("prompt is too long, trimming...")
+        form_prompt_chunks = []
+        chunks = [sentence for sentence in sent_tokenize(form_prompt)]
+        temp_prompt = ''
+        for sentence in chunks:
+            if num_tokens_from_string(temp_prompt + sentence) < max_tokens:
+                temp_prompt += sentence
+            else:
+                form_prompt_chunks.append(temp_prompt.strip())
+                temp_prompt = sentence
+        if temp_prompt != '':
+            form_prompt_chunks.append(temp_prompt.strip())
+        is_trimmed = True
+        completed_messages = []
+        for chunk in form_prompt_chunks:
+            message = {"role": "user", "content": global_prompt + chunk}
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[message],
+                temperature=0.7,
+                max_tokens=500,
+                top_p=1.0,
+                frequency_penalty=0.0,
+                presence_penalty=1
+            )
+            completed_messages.extend(response["choices"][0]['message']['content'].split('\n')[:-1])
+        completed_messages.append(response["choices"][0]['message']['content'].split('\n')[-1])
+        openai_response = {"choices": [{"message": {"content": '\n'.join(completed_messages)}}]}
+        global_number_of_chunks = len(form_prompt_chunks)
+        return openai_response, is_trimmed, form_prompt, global_number_of_chunks
+    else:
+        #print("prompt is not trimmed")
+        message = {"role": "user", "content": global_prompt + form_prompt}
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[message],
+            temperature=0.7,
+            max_tokens=500,
+            top_p=1.0,
+            frequency_penalty=0.0,
+            presence_penalty=1
+        )
+        global_number_of_chunks = 1
+        return response, is_trimmed, form_prompt, global_number_of_chunks
 
 
 # Function to write to the database

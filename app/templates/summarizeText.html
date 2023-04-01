@@ -35,6 +35,7 @@
             <details>
                 <summary>Stats for Nerds</summary>
                 <p><strong>Token count:</strong> {{ token_count }}</p>
+                <p><strong>Chunks count:</strong> {{ number_of_chunks }}</p>
                 <p><strong>Average tokens per sentence:</strong> {{ avg_tokens_per_sentence|round(2) }}</p>
                 {% if is_trimmed %}
                     <p> The Text has been trimed for exceeding the max token count. Check below for the trimmed prompt</p>
