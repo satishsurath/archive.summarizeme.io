@@ -8,7 +8,7 @@ import hashlib
 nltk.download('punkt')
 from nltk.tokenize import sent_tokenize
 from app import app, db, login_manager
-from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form
+from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, DeleteEntry
 from app.models import Entry_Post
 from flask import render_template, flash, redirect, url_for, request
 from trafilatura import extract
@@ -18,6 +18,7 @@ from sqlalchemy import Table, Column, Float, Integer, String, MetaData, ForeignK
 from flask_migrate import Migrate
 from flask_login import login_required, current_user, UserMixin
 from flask_login import login_user, logout_user, login_required
+from flask_wtf.csrf import generate_csrf
 
 # -------------------- Utility functions --------------------
 
@@ -42,6 +43,10 @@ def avg_sentence_length(text):
 @app.context_processor
 def inject_enumerate():
     return dict(enumerate=enumerate)
+
+@app.context_processor
+def inject_csrf_token():
+    return dict(csrf_token=generate_csrf())
 
 # Custom Jinja filter to replace newline characters with <br> tags
 def nl2br(value):
@@ -173,6 +178,8 @@ def summarizeText():
         return render_template('summarizeText.html', title='Summarize From Text', form=form)
 
 
+
+
 @app.route('/summarizeURL', methods=['GET', 'POST'])
 def summarizeURL():
     form = SummarizeFromURL()
@@ -268,13 +275,21 @@ def logout():
   logout_user()
   return redirect(url_for('index'))
 
-@app.route('/logs')
+@app.route('/logs', methods=['GET', 'POST'])
 @login_required
 def logs():
+    form = DeleteEntry()
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 5, type=int)
     entries = Entry_Post.query.order_by(Entry_Post.id.desc()).paginate(page=page, per_page=per_page)
-    return render_template('logs.html', entries=entries)    
+    return render_template('logs.html', entries=entries)   
+
+# writing route for url_for('delete_entry', entry_id=entry.id) 
+@app.route('/delete_entry/<entry_id>', methods=['GET', 'POST'])
+def delete_entry(entry_id):
+  # delete the entry from the database
+  delete_entry_from_db(entry_id)
+  return redirect(url_for('logs')) 
 
 @app.route('/openAI-debug', methods=['GET', 'POST'])
 @login_required
@@ -392,3 +407,14 @@ def write_to_db(posttype, url, test2summarizedb, openAIsummarydb):
       db.session.commit()
       db.session.close()
       content_written = True
+
+# delete_entry_from_db(entry_id)
+def delete_entry_from_db(entry_id):
+  entry = Entry_Post.query.filter_by(id=entry_id).first()
+  if entry:
+    db.session.delete(entry)
+    db.session.commit()
+    db.session.close()
+    return True
+  else:
+    return False

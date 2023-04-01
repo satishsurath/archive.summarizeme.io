@@ -17,4 +17,8 @@ class SummarizeFromURL(FlaskForm):
 class openAI_debug_form(FlaskForm):
     openAI_debug_form_key = StringField('Paste your OpenAI API Key (will not be saved)')
     openAI_debug_form_prompt = StringField('OpenAI Input:', widget=TextArea())
-    submit = SubmitField('Submit')    
+    submit = SubmitField('Submit')   
+
+#form to delete the entry
+class DeleteEntry(FlaskForm):
+    submit = SubmitField('Delete') 

@@ -11,6 +11,7 @@
     <thead>
       <tr>
         <th>Id</th>
+        <th>Delete</th>
         <th>Timestamp</th>
         <th>URL</th>  
         <th>test2summarize</th>                            
@@ -21,6 +22,12 @@
       {% for entry in entries %}
         <tr>
           <td>{{ entry.id }}</td>
+          <td>
+            <form action="{{ url_for('delete_entry', entry_id=entry.id) }}" method="post">
+              <input type="hidden" name="_method" value="DELETE">
+              <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+              <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
           <td>{{ entry.timestamp }}</td>
           <td>
             {% if entry.posttype  != "0" %}   
