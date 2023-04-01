@@ -42,7 +42,8 @@ flask run
 - **Summarize From Text** feature works for limited number of characters
 - **Summarize From URL** Extract Main Text from a webpage and summarize it
 - **Saving the data to a local SQLite file** saves all files to a local sqlite file
-- **Trim Prompt** If the Text to summarize is exceeding the max supported token size 
+- **Stats for nerds** Displaying additional stats and raw JSON output
+- **Trim Prompt** Indicate and trim if the Text to summarize is exceeding the max supported token size 
 
 ### Features to be added:
 
