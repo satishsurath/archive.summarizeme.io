@@ -11,7 +11,7 @@ class SummarizeFromText(FlaskForm):
     submit = SubmitField('Summarize')
 
 class SummarizeFromURL(FlaskForm):
-    summarize = URLField('Paste / type the text to summarize below:')
+    summarize = URLField('Paste / type the URL of the webpage to summarize below:')
     submit = SubmitField('Summarize')
 
 class openAI_debug_form(FlaskForm):
