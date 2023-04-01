@@ -4,6 +4,7 @@ import json
 import trafilatura
 import tiktoken
 import nltk
+import hashlib
 nltk.download('punkt')
 from nltk.tokenize import sent_tokenize
 from app import app, db, login_manager
@@ -93,7 +94,7 @@ global_is_trimmed = False
 global_form_prompt = ""
 global_prompt = "Summarize the below text in a few short bullet points: \n\n"
 global_number_of_chunks = 0
-
+content_written = False
 
 
 # -------------------- Routes --------------------
@@ -114,29 +115,42 @@ def summarizeText():
     global global_form_prompt
     global global_prompt
     global global_number_of_chunks
-    if form.validate_on_submit():
-      test2summarize = form.summarize.data
-      openAI_summary, global_is_trimmed, global_form_prompt, global_number_of_chunks = openAI_summarize_chunk(test2summarize)
-      return redirect(url_for('summarizeText'))
-    if (openAI_summary):
-      write_to_db(0,"0",test2summarize,openAI_summary["choices"][0]['message']['content'])
-      # Calculate token count and average tokens per sentence
-      token_count = num_tokens_from_string(test2summarize)
-      avg_tokens_per_sentence = avg_sentence_length(test2summarize) 
-      openAI_summary_str = json.dumps(openAI_summary, indent=4)     
-      return render_template(
-        'summarizeText.html', 
-        title='Summarize From Text', 
-        form=form,
-        test2summarize=test2summarize.split('\n'), 
-        openAI_summary=openAI_summary["choices"][0]['message']['content'].split('\n'),  
-        token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence, 
-        openAI_json=openAI_summary_str, 
-        is_trimmed=global_is_trimmed, 
-        form_prompt_nerds=global_form_prompt,
-        number_of_chunks=global_number_of_chunks
-      )
+    global content_written
+    if not content_written:
+      if form.validate_on_submit():
+        test2summarize = form.summarize.data
+        test2summarize_hash = hashlib.sha256(test2summarizedb.encode('utf-8')).hexdigest()
+        if check_if_hash_exists(test2summarize_hash):
+          openAI_summary = get_summary_from_hash(test2summarize_hash)
+          global_is_trimmed = False
+          global_form_prompt = test2summarize
+          global_number_of_chunks = "Retrived from Database"
+        else:
+          openAI_summary, global_is_trimmed, global_form_prompt, global_number_of_chunks = openAI_summarize_chunk(test2summarize)
+        return redirect(url_for('summarizeText'))
+      if (openAI_summary):
+        write_to_db(0,"0",test2summarize,openAI_summary["choices"][0]['message']['content'])
+        # Calculate token count and average tokens per sentence
+        token_count = num_tokens_from_string(test2summarize)
+        avg_tokens_per_sentence = avg_sentence_length(test2summarize) 
+        openAI_summary_str = json.dumps(openAI_summary, indent=4)     
+        return render_template(
+          'summarizeText.html', 
+          title='Summarize From Text', 
+          form=form,
+          test2summarize=test2summarize.split('\n'), 
+          openAI_summary=openAI_summary["choices"][0]['message']['content'].split('\n'),  
+          token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence, 
+          openAI_json=openAI_summary_str, 
+          is_trimmed=global_is_trimmed, 
+          form_prompt_nerds=global_form_prompt,
+          number_of_chunks=global_number_of_chunks
+        )
+      else:
+        content_written = False
+        return render_template('summarizeText.html', title='Summarize From Text', form=form)
     else:
+        content_written = False
         return render_template('summarizeText.html', title='Summarize From Text', form=form)
 
 
@@ -149,39 +163,52 @@ def summarizeURL():
     global global_is_trimmed
     global global_form_prompt
     global global_number_of_chunks
-    if form.validate_on_submit():
-      newconfig = use_config()
-      newconfig.set("DEFAULT", "EXTRACTION_TIMEOUT", "0")
-      downloaded = trafilatura.fetch_url(form.summarize.data)
-      url = form.summarize.data
-      test2summarize = extract(downloaded, config=newconfig)
-      openAI_summary, global_is_trimmed, global_form_prompt, global_number_of_chunks = openAI_summarize_chunk(test2summarize)
-      return redirect(url_for('summarizeURL'))
-    if (openAI_summary):
-      write_to_db(1,url,test2summarize,openAI_summary["choices"][0]['message']['content'])
-      # Calculate token count and average tokens per sentence
-      token_count = num_tokens_from_string(test2summarize)
-      avg_tokens_per_sentence = avg_sentence_length(test2summarize)
-      openAI_summary_str = json.dumps(openAI_summary, indent=4)
-      return render_template(
-        'summarizeURL.html',
-        title='Summarize From URL',
-        form=form,
-        test2summarize=test2summarize.split('\n'),
-        openAI_summary=openAI_summary["choices"][0]['message']['content'].split('\n'),
-        token_count=token_count,
-        avg_tokens_per_sentence=avg_tokens_per_sentence,
-        openAI_json=openAI_summary_str,
-        is_trimmed=global_is_trimmed,
-        form_prompt_nerds=global_form_prompt,
-        number_of_chunks=global_number_of_chunks
-      )
-    else:
+    global content_written
+    if not content_written:
+      if form.validate_on_submit():
+        newconfig = use_config()
+        newconfig.set("DEFAULT", "EXTRACTION_TIMEOUT", "0")
+        downloaded = trafilatura.fetch_url(form.summarize.data)
+        url = form.summarize.data
+        test2summarize = extract(downloaded, config=newconfig)
+        test2summarize_hash = hashlib.sha256(test2summarizedb.encode('utf-8')).hexdigest()
+        if check_if_hash_exists(test2summarize_hash):
+          openAI_summary = get_summary_from_hash(test2summarize_hash)
+          global_is_trimmed = False
+          global_form_prompt = test2summarize
+          global_number_of_chunks = "Retrived from Database"
+        else:
+          openAI_summary, global_is_trimmed, global_form_prompt, global_number_of_chunks = openAI_summarize_chunk(test2summarize)
+        return redirect(url_for('summarizeURL'))
+      if (openAI_summary):
+        write_to_db(1,url,test2summarize,openAI_summary["choices"][0]['message']['content'])
+        # Calculate token count and average tokens per sentence
+        token_count = num_tokens_from_string(test2summarize)
+        avg_tokens_per_sentence = avg_sentence_length(test2summarize)
+        openAI_summary_str = json.dumps(openAI_summary, indent=4)
         return render_template(
           'summarizeURL.html',
           title='Summarize From URL',
-          form=form
+          form=form,
+          test2summarize=test2summarize.split('\n'),
+          openAI_summary=openAI_summary["choices"][0]['message']['content'].split('\n'),
+          token_count=token_count,
+          avg_tokens_per_sentence=avg_tokens_per_sentence,
+          openAI_json=openAI_summary_str,
+          is_trimmed=global_is_trimmed,
+          form_prompt_nerds=global_form_prompt,
+          number_of_chunks=global_number_of_chunks
         )
+      else:
+        content_written = False
+        return render_template('summarizeURL.html', title='Summarize From URL', form=form)
+    else:
+      content_written = False
+      return render_template(
+        'summarizeURL.html',
+        title='Summarize From URL',
+        form=form
+      )
 
 
 
@@ -245,6 +272,8 @@ def openAI_summarize_debug(form_openai_key, form_prompt):
       )
     print(json.dumps(response, indent=4)) 
     return response
+
+
 # Functions to call the OpenAI API
 def openAI_summarize_chunk(form_prompt):
     # Count tokens in the form_prompt
@@ -298,10 +327,29 @@ def openAI_summarize_chunk(form_prompt):
         global_number_of_chunks = 1
         return response, is_trimmed, form_prompt, global_number_of_chunks
 
+# function to check if the hash of test2summarize is already in the database then retun
+def check_if_hash_exists(test2summarize_hash):
+  entry = Entry_Post.query.filter_by(test2summarize_hash=test2summarize_hash).first()
+  if entry:
+    return True
+  else:
+    return False
+
+# function to return the Summary if the hash of test2summarize is already in the database
+def get_summary_from_hash(test2summarize_hash):
+  entry = Entry_Post.query.filter_by(test2summarize_hash=test2summarize_hash).first()
+  if entry:
+    return entry.openAIsummary
+  else:
+    return False
 
 # Function to write to the database
 def write_to_db(posttype, url, test2summarizedb, openAIsummarydb):
-  entry = Entry_Post(posttype = posttype, url = url, test2summarize = test2summarizedb, openAIsummary = openAIsummarydb)       
-  db.session.add(entry)
-  db.session.commit()
-  db.session.close()
+  global content_written
+  if not content_written:
+      test2summarize_hash = hashlib.sha256(test2summarizedb.encode('utf-8')).hexdigest()
+      entry = Entry_Post(posttype=posttype, url=url, test2summarize=test2summarizedb, openAIsummary=openAIsummarydb, test2summarize_hash=test2summarize_hash)
+      db.session.add(entry)
+      db.session.commit()
+      db.session.close()
+      content_written = True
