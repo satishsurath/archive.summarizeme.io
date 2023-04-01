@@ -8,7 +8,7 @@ body {
   color: #10141d;
   --text-color: #10141d;
   --bkg-color: #f2f3f7;
-  --form-bkg-color: #edf1fb;
+  --form-bkg-color: #eee;
   transition: background-color 0.8s, color 0.8s, border-color 0.8s;
 }
 
@@ -17,7 +17,7 @@ body.dark-mode {
   color: #edf1fb;
   --text-color: #edf1fb;
   --bkg-color: #10141d;
-  --form-bkg-color: #1c3365;
+  --form-bkg-color: #444;
   transition: background-color 0.8s, color 0.8s, border-color 0.8s;
 
 }
