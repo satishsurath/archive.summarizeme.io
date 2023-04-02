@@ -81,7 +81,52 @@
           border-radius: 50%;
         }
     </style>
-    
+    <script>
+function setTheme(theme) {
+    const root = document.documentElement;
+    const body = document.body;
+    if (theme === 'dark') {
+        body.classList.add('dark-mode');
+        root.style.setProperty('--bg-color', '#10141d');
+        root.style.setProperty('--text-color', '#edf1fb');
+        root.style.setProperty('--input-bg-color', '#444');
+        root.style.setProperty('--input-text-color', '#edf1fb');
+        root.style.setProperty('--button-bg-color', '#444');
+        root.style.setProperty('--button-text-color', '#edf1fb');
+    } else {
+        body.classList.remove('dark-mode');
+        root.style.setProperty('--bg-color', '#f2f3f7');
+        root.style.setProperty('--text-color', '#10141d');
+        root.style.setProperty('--input-bg-color', '#f2f3f7');
+        root.style.setProperty('--input-text-color', '#10141d');
+        root.style.setProperty('--button-bg-color', '#f2f3f7');
+        root.style.setProperty('--button-text-color', '#10141d');
+    }
+    localStorage.setItem('theme', theme);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    applyTheme();
+
+    const toggleSwitch = document.getElementById('toggle-theme');
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    toggleSwitch.checked = savedTheme === 'dark';
+
+    toggleSwitch.addEventListener('change', () => {
+        const newTheme = toggleSwitch.checked ? 'dark' : 'light';
+        setTheme(newTheme);
+    });
+});
+
+function applyTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
+}
+
+    </script>
+
+
+
     </head>
     <body>
       <div class="container">
@@ -102,7 +147,7 @@
               <!-- Add the toggle switch element -->
               Dark Mode
               <label class="switch"> 
-                <input type="checkbox" id="toggle-theme" onclick="toggleTheme()">
+                <input type="checkbox" id="toggle-theme" onclick="setTheme()">
                 <span class="slider round"></span>
               </label>
         </div>
@@ -124,32 +169,5 @@
         </ul>
     </div>  
       </div>
-      <script>
-// Function to handle theme toggle and save preference
-const toggleTheme = () => {
-  const body = document.body;
-  const toggleSwitch = document.getElementById('toggle-theme');
-
-  // Toggle the "dark-mode" class on the body element
-  body.classList.toggle('dark-mode');
-
-  // Save the theme preference in local storage
-  localStorage.setItem('theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
-}
-
-// Apply saved theme and set the toggle switch state on page load
-document.addEventListener('DOMContentLoaded', () => {
-  const savedTheme = localStorage.getItem('theme') || 'light';
-  const toggleSwitch = document.getElementById('toggle-theme');
-
-  if (savedTheme === 'dark') {
-    document.body.classList.add('dark-mode');
-    toggleSwitch.checked = true;
-  } else {
-    toggleSwitch.checked = false;
-  }
-});
-
-      </script>
     </body>
 </html>
