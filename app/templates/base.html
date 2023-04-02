@@ -97,15 +97,15 @@
               <li class="nav-links"> <a href="{{ url_for('openAI_debug') }}">OpenAI Debug</a></li> 
               <li class="nav-links"><a href="{{ url_for('logout') }}">Logout</a></li>
             {% endif %}   
-            <li class="nav-links">
+        </ul>
+        <div class="toggle-dark-mode-animation">
               <!-- Add the toggle switch element -->
-              <label class="switch">
+              Dark Mode
+              <label class="switch"> 
                 <input type="checkbox" id="toggle-theme" onclick="toggleTheme()">
                 <span class="slider round"></span>
               </label>
-            </li>
-      
-        </ul>
+        </div>
       </div>  
       <div class="item">
         {% block content %}

@@ -134,3 +134,11 @@ input[type="submit"]:hover {
 .form-control, .btn {
   border-radius: 3px;
 }
+
+.toggle-dark-mode-animation {
+  align-self: flex-end;
+  width: 100px;
+  height: 30px;
+  margin-top: 0.5rem;
+  margin-right: 0.5rem;
+  }
