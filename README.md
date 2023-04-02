@@ -2,6 +2,8 @@
 
 Leverage Generative AI and Python Flask to effortlessly summarize text, web pages, and PDF files.
 
+[**🔗 Try the live demo here!**](https://ai.sati.sh/index)
+
 ## 🚧 Work in Progress 🚧
 
 ### ✅ Implemented Features:
