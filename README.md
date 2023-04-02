@@ -1,6 +1,6 @@
 # Summarize4Me
 
-Leverage Generative AI and Python Flask to effortlessly summarize text, web pages, and PDF files.
+AI-powered text summarization made simple. Condense articles, web pages, and PDFs effortlessly. Save time and boost productivity with Summarize4Me.
 
 [**🔗 Try the live demo here!**](https://ai.sati.sh/index)
 
