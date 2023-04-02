@@ -30,14 +30,18 @@
             </form>
           <td>{{ entry.timestamp }}</td>
           <td>
-            {% if entry.posttype  != "0" %}   
-              {% if entry.url  == "0" %} 
-                Summary from Text
-              {% else %}
+            {% if entry.posttype  == 1 %}   
+
                 <a href="{{ entry.url}}" target="_blank">
                   {{ entry.url[:15] }}...
                 </a>
-              {% endif %}
+            {% elif entry.posttype  == 0 %} 
+                Summary from Text
+            
+            {% elif entry.posttype  == 2 %} 
+            <a href="/static/uploads/{{ entry.url}}" target="_blank">
+              {{ entry.url[:15] }}...
+            </a>
             {% endif %}
           </td>
           <td style="text-align: left;">

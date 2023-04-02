@@ -134,3 +134,6 @@ app.sqlite3
 #ignoriing mac files
 **/.DS_Store
 
+#ignore uploads folder
+uploads/
+app/static/uploads/

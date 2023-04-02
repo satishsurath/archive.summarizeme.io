@@ -4,7 +4,7 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.widgets import TextArea
 from wtforms.fields import URLField
 from wtforms.validators import DataRequired, URL
-
+from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 class SummarizeFromText(FlaskForm):
     summarize = StringField('Paste / type the text to summarize below:', widget=TextArea(), validators=[DataRequired()])
@@ -22,3 +22,8 @@ class openAI_debug_form(FlaskForm):
 #form to delete the entry
 class DeleteEntry(FlaskForm):
     submit = SubmitField('Delete') 
+
+class UploadPDFForm(FlaskForm):
+    pdf = FileField('Upload PDF', validators=[FileRequired(), FileAllowed(['pdf'], 'PDF files only')])
+    submit = SubmitField('Summarize PDF file')
+

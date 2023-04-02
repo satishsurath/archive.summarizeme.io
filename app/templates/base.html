@@ -11,8 +11,10 @@
       <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
       <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
       <link rel="manifest" href="/static/site.webmanifest">
-      <link rel="mask-icon" href="/static/safari-pinned-tab.svg" color="#5bbad5">
+      <link rel="mask-icon" href="/static/safari-pinned-tab.svg" color="#d5985b">
+      <link rel="shortcut icon" href="/static/favicon.ico">
       <meta name="msapplication-TileColor" content="#da532c">
+      <meta name="msapplication-config" content="/static/browserconfig.xml">
       <meta name="theme-color" content="#ffffff">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link rel="stylesheet" type="text/css" href="/static/style.css">
@@ -89,6 +91,7 @@
          <li class="nav-links"> <a href="{{ url_for('index') }}">Home</a></li> 
          <li class="nav-links"> <a href="{{ url_for('summarizeText') }}">Summarize Text</a></li> 
          <li class="nav-links"> <a href="{{ url_for('summarizeURL') }}">Summarize URL</a></li>
+         <li class="nav-links"> <a href="{{ url_for('summarizePDF') }}">Summarize PDF</a></li>
          <li class="nav-links"> <a href="{{ url_for('logs') }}">Logs</a></li> 
             {% if current_user.is_authenticated %}
               <li class="nav-links"> <a href="{{ url_for('openAI_debug') }}">OpenAI Debug</a></li> 

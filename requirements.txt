@@ -367,3 +367,4 @@ rauth
 requests
 tiktoken
 trafilatura
+pdfminer.six

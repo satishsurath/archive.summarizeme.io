@@ -8,7 +8,7 @@ import hashlib
 nltk.download('punkt')
 from nltk.tokenize import sent_tokenize
 from app import app, db, login_manager
-from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, DeleteEntry
+from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, DeleteEntry, UploadPDFForm
 from app.models import Entry_Post
 from flask import render_template, flash, redirect, url_for, request
 from trafilatura import extract
@@ -19,6 +19,10 @@ from flask_migrate import Migrate
 from flask_login import login_required, current_user, UserMixin
 from flask_login import login_user, logout_user, login_required
 from flask_wtf.csrf import generate_csrf
+from werkzeug.utils import secure_filename
+from pdfminer.high_level import extract_text
+from io import BytesIO
+
 
 # -------------------- Utility functions --------------------
 
@@ -90,6 +94,7 @@ def request_loader(request):
 app.jinja_env.filters['nl2br'] = nl2br
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+
 # -------------------- Global variables --------------------
 
 openAI_summary = "" 
@@ -100,6 +105,7 @@ global_form_prompt = ""
 global_prompt = "Summarize the below text in a few short bullet points: \n\n"
 global_number_of_chunks = 0
 content_written = False
+global_pdf_filename = ""
 
 
 # -------------------- Routes --------------------
@@ -253,6 +259,99 @@ def summarizeURL():
       return render_template(
         'summarizeURL.html',
         title='Summarize From URL',
+        form=form
+      )
+
+@app.route('/summarizePDF', methods=['GET', 'POST'])
+def summarizePDF():
+    print("summarizePDF - 1")
+    form = UploadPDFForm()
+    global openAI_summary
+    global test2summarize
+    global url
+    global global_is_trimmed
+    global global_form_prompt
+    global global_number_of_chunks
+    global content_written
+    global global_pdf_filename
+    if not content_written:
+      if form.validate_on_submit():
+        # Get the uploaded PDF file
+        pdf_file = form.pdf.data
+
+        # Read the PDF contents
+        test2summarize = extract_text(BytesIO(pdf_file.read()))        
+        test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()   
+        
+        # Save the PDF file to the uploads folder
+        filename = secure_filename(test2summarize_hash + pdf_file.filename)
+        global_pdf_filename = filename
+        pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+
+     
+
+        # Seek to the beginning of the file before saving        
+        pdf_file.seek(0)  
+        pdf_file.save(pdf_path)        
+
+        if check_if_hash_exists(test2summarize_hash):
+          openAI_summary = get_summary_from_hash(test2summarize_hash)
+          global_is_trimmed = False
+          global_form_prompt = test2summarize
+          global_number_of_chunks = "Retrived from Database"
+        else:
+          openAI_summary, global_is_trimmed, global_form_prompt, global_number_of_chunks = openAI_summarize_chunk(test2summarize)
+        return redirect(url_for('summarizePDF'))
+      if (openAI_summary):
+        test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
+        
+
+        if not check_if_hash_exists(test2summarize_hash):
+          write_to_db(2,global_pdf_filename,test2summarize,openAI_summary["choices"][0]['message']['content'])
+          # Calculate token count and average tokens per sentence
+          token_count = num_tokens_from_string(test2summarize)
+          avg_tokens_per_sentence = avg_sentence_length(test2summarize)
+          openAI_summary_str = json.dumps(openAI_summary, indent=4)
+          return render_template(
+            'summarizePDF.html',
+            title='Summarize PDF',
+            form=form,
+            test2summarize=test2summarize.split('\n'),
+            openAI_summary=openAI_summary["choices"][0]['message']['content'].split('\n'),
+            token_count=token_count,
+            avg_tokens_per_sentence=avg_tokens_per_sentence,
+            openAI_json=openAI_summary_str,
+            is_trimmed=global_is_trimmed,
+            form_prompt_nerds=global_form_prompt,
+            number_of_chunks=global_number_of_chunks
+          )
+        else:
+          # Calculate token count and average tokens per sentence
+          token_count = num_tokens_from_string(test2summarize)
+          avg_tokens_per_sentence = avg_sentence_length(test2summarize)
+          openAI_summary_str = "Retrived from Database"
+          return render_template(
+            'summarizePDF.html',
+            title='Summarize PDF',
+            form=form,
+            test2summarize=test2summarize.split('\n'),
+            openAI_summary=openAI_summary.split('\n'),
+            token_count=token_count,
+            avg_tokens_per_sentence=avg_tokens_per_sentence,
+            openAI_json=openAI_summary_str,
+            is_trimmed=global_is_trimmed,
+            form_prompt_nerds=global_form_prompt,
+            number_of_chunks=global_number_of_chunks
+          )
+      else:
+        content_written = False
+        return render_template('summarizePDF.html', title='Summarize PDF', form=form)
+    else:
+      content_written = False
+      return render_template(
+        'summarizePDF.html',
+        title='Summarize PDF',
         form=form
       )
 

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Summarize PDF</h1>
+    <form method="POST" onsubmit="showProcessing()" enctype="multipart/form-data" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.csrf_token }}
+            {{ form.pdf.label }}<br>
+            {{ form.pdf(class_='form-control',placeholder='Upload PDF...') }}<br>
+            {% for error in form.pdf.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+        </p>
+        <br>
+        <p>{{ form.submit() }}</p>
+        <div id="processing" style="display:none; font-weight:bold;">Processing<span id="dots"></span></div>
+        {% if openAI_summary %}
+            <div class="left-align">
+                <details>
+                    <summary><b>Text to Summarize:</b></summary>
+                    <p>
+                        {% for para_test2summarize in test2summarize %}
+                            {{para_test2summarize}}
+                        {% endfor %}
+                    </p>  
+                </details>    
+            <hr>
+            <h2>Summary:</h2>
+            <p>
+                {% for para_summary in openAI_summary %}
+                    {{para_summary}}<br>
+                {% endfor %}
+            </p>
+            <hr>
+            <details>
+                <summary>Stats for Nerds</summary>
+                <p><strong>Token count:</strong> {{ token_count }}</p>
+                <p><strong>Chunks count:</strong> {{ number_of_chunks }}</p>
+                <p><strong>Average tokens per sentence:</strong> {{ avg_tokens_per_sentence|round(2) }}</p>
+                {% if is_trimmed %}
+                    <p> The Text has been trimed for exceeding the max token count. Check below for the trimmed prompt</p>
+                {% else %}
+                    <p> The Text has NOT been trimed</p>
+                {% endif %}
+            </details>
+            {% if is_trimmed %}
+                <details>
+                    <summary>Trimmed Prompt</summary>
+                    <p> {{ form_prompt_nerds }}</p>
+                </details>
+            {% endif %}
+            <details>
+                <summary>JSON:</summary>
+                <pre style="white-space: pre-wrap;" class="prettyprint">{{ openAI_json|nl2br|safe }}</pre>
+            </details>
+        {% endif %}
+    </form>
+    <script>
+        var interval;
+        var dotCount = 0;
+
+        function showProcessing() {
+            document.getElementById('processing').style.display = 'block';
+            animateDots();
+        }
+
+        function animateDots() {
+            interval = setInterval(function() {
+                var dots = '';
+                for (var i = 0; i < dotCount; i++) {
+                    dots += '.';
+                }
+                document.getElementById('dots').innerText = dots;
+                dotCount = (dotCount + 1) % 4;
+            }, 500);
+        }
+    </script>
+{% endblock %}
