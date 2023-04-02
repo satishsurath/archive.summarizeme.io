@@ -7,16 +7,15 @@ Leverage Generative AI and Python Flask to effortlessly summarize text, web page
 ## 🚧 Work in Progress 🚧
 
 ### ✅ Implemented Features:
-- **Summarize Text and URLs:** Easily summarize content from plain text or web pages.
+- **Summarize Text, URLs and PDF files:** Easily summarize content from plain text, web pages or PDF files.
 - **Unlimited Token Support with Chunking:** No more token size limits! The chunking feature allows seamless summarization of any length of text or URL, providing a smooth and efficient experience.
-- **Hash-Based Database Storage for Fast Retrieval:** Optimize the retrieval process by storing the text's hash in our database, allowing for quicker access to existing summaries and saving time.
 - **Local SQLite File Storage:** Automatically save all files to a local SQLite file.
+- **Hash-Based Database Storage for Fast Retrieval:** Optimize the retrieval process by storing the text's hash in our database, allowing for quicker access to existing summaries and saving time.
 - **Stats for Nerds:** Display additional statistics and raw JSON output.
 - **Dark Mode Support:** Enhance your experience with our dark mode feature.
 
 ### 🔜 Upcoming Features:
 
-- Summarize text extracted from PDF files.
 - Add a Privacy Notice.
 - Enable Session Management.
 - Implement SPAM Protection.
@@ -24,7 +23,7 @@ Leverage Generative AI and Python Flask to effortlessly summarize text, web page
 
 ## 💻 Installation
 
-1. [Create and activate a new Python virtual environment (venv) or a new conda environment.](/docs/new-virtual-python-env.md)
+1. Create and activate a [new Python virtual environment (venv) or a new conda environment.](/docs/new-virtual-python-env.md)
 
    
 2. Clone this repository:
