@@ -32,7 +32,7 @@ Leverage Generative AI and Python Flask to effortlessly summarize text, web page
    git clone git@github.com:satishsurath/summarize4me.git
     ```
 
-3. Set up your OpenAI API Key as an environment variable:
+3. Set up your OpenAI API Key as an environment variable. [Request an API key here.](https://openai.com/blog/openai-api)
 ```shell
 export OPENAI_API_KEY=[YOUR-OPENAI_API_KEY-HERE]
 ```
