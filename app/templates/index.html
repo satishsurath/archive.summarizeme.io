@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
         <h1>Productivity Upgrade</h1>
-        <p class="center-align">
-                📄➕🤖 ➡🎯  <br>              
+
+        <h2> 📄➕🤖 ➡🎯 </h2>
+        <br>
+        <p class="center-align">                            
         AI-powered text summarization made simple. <br>
         Condense articles, web pages, and PDFs effortlessly. <br>
         Save time and boost productivity with Summarize4Me. 
@@ -15,18 +17,15 @@
         - Basic Form Validation Support<br>
 
         <br>
-        <b>Features that work from before:</b><br>
-        - Unlimited Token Support with Chunking. No more token size limit to the Text / URL </br>
-        - Added OpenAI-Debug Page for Authenticated Admins<br>
-        - Backend logging<br>
-        - Backend Pagination Support and Responsive UI for the Logs Page<br>
+        <b>Existing Features:</b><br>
+        - Summarize From Text<br>
+        - Summarize Webpage from URL<br>        
+        - Unlimited Token Support with chunking. No more token size limit to the Text / URL </br>
+        - OpenAI-Debug Page for authenticated admins<br>
+        - Backend logging with pagination and deletion support<br>
         - Changed to gpt-3.5-turb from text-davinci-003<br>
-        - Delete Entry Option in Logs Page<br>        
-        - Displaying additional stats at the bottom of the page and the option to see the raw JSON output<br>
-        - Hash-Based Database Storage for Faster Retrieval<br>        
-        - Summarize From Text feature works for a limited number of characters<br>
-        - Summarize From URL Extract the main text from a webpage and summarize it<br>
-        - Trimming the Prompt to be within the max token limit of gpt-3.5-turbo<br>
+        - Additional stats display and raw JSON output option<br>
+        - Hash-Based Database Storage for faster retrieval<br>        
         <br>
         <b>Features In the Pipeline:</b><br>
         - Extract Text from a PDF file and Summarize it<br>
