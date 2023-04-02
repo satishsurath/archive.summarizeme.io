@@ -136,6 +136,7 @@ def summarizeText():
         #check if the hash exists in the Local Database, before calling the OpenAI API
         if check_if_hash_exists(test2summarize_hash):
           openAI_summary = get_summary_from_hash(test2summarize_hash)
+          openAI_summary_JSON = read_from_file(test2summarize_hash+".json")
           global_is_trimmed = False
           global_form_prompt = test2summarize
           global_number_of_chunks = "Retrived from Database"
@@ -153,7 +154,8 @@ def summarizeText():
           # Calculate token count and average tokens per sentence
           token_count = num_tokens_from_string(test2summarize)
           avg_tokens_per_sentence = avg_sentence_length(test2summarize) 
-          openAI_summary_str = json.dumps(openAI_summary_JSON, indent=4)     
+          openAI_summary_str = json.dumps(openAI_summary_JSON, indent=4)
+          write_to_file(test2summarize_hash+".json",openAI_summary_JSON)               
           return render_template(
             'summarizeText.html', 
             title='Summarize From Text', 
@@ -171,7 +173,10 @@ def summarizeText():
           # Calculate token count and average tokens per sentence
           token_count = num_tokens_from_string(test2summarize)
           avg_tokens_per_sentence = avg_sentence_length(test2summarize) 
-          openAI_summary_str = "Retrived from Database"    
+          if not openAI_summary_JSON:
+            openAI_summary_str = "Retrived from Database"
+          else:
+            openAI_summary_str = json.dumps(openAI_summary_JSON, indent=4)    
           return render_template(
             'summarizeText.html', 
             title='Summarize From Text', 
@@ -216,12 +221,14 @@ def summarizeURL():
         #check if the hash exists in the Local Database, before calling the OpenAI API
         if check_if_hash_exists(test2summarize_hash):
           openAI_summary = get_summary_from_hash(test2summarize_hash)
+          openAI_summary_JSON = read_from_file(test2summarize_hash+".json")
           global_is_trimmed = False
           global_form_prompt = test2summarize
           global_number_of_chunks = "Retrived from Database"
         else:
           openAI_summary_JSON, global_is_trimmed, global_form_prompt, global_number_of_chunks = openAI_summarize_chunk(test2summarize)
           openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
+          write_to_file(test2summarize_hash+".json",openAI_summary_JSON)          
         return redirect(url_for('summarizeURL'))
       
       #Now that we have the summary, we can render the page
@@ -252,7 +259,10 @@ def summarizeURL():
           # Calculate token count and average tokens per sentence
           token_count = num_tokens_from_string(test2summarize)
           avg_tokens_per_sentence = avg_sentence_length(test2summarize)
-          openAI_summary_str = "Retrived from Database"
+          if not openAI_summary_JSON:
+            openAI_summary_str = "Retrived from Database"
+          else:
+            openAI_summary_str = json.dumps(openAI_summary_JSON, indent=4)   
           return render_template(
             'summarizeURL.html',
             title='Summarize From URL',
@@ -305,18 +315,22 @@ def summarizePDF():
         pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
         # Seek to the beginning of the file before saving, then save the file        
-        pdf_file.seek(0)  
-        pdf_file.save(pdf_path)
+        pdf_file.seek(0)
+        #check if folder exists:
+        if check_folder_exists():  
+          pdf_file.save(pdf_path)
 
         #check if the hash exists in the Local Database, before calling the OpenAI API
         if check_if_hash_exists(test2summarize_hash):
           openAI_summary = get_summary_from_hash(test2summarize_hash)
+          openAI_summary_JSON = read_from_file(test2summarize_hash+".json")
           global_is_trimmed = False
           global_form_prompt = test2summarize
           global_number_of_chunks = "Retrived from Database"
         else:
           openAI_summary_JSON, global_is_trimmed, global_form_prompt, global_number_of_chunks = openAI_summarize_chunk(test2summarize)
           openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
+          write_to_file(test2summarize_hash+".json",openAI_summary_JSON)
         return redirect(url_for('summarizePDF'))
       
       #Now that we have the summary, we can render the page
@@ -347,7 +361,10 @@ def summarizePDF():
           # Calculate token count and average tokens per sentence
           token_count = num_tokens_from_string(test2summarize)
           avg_tokens_per_sentence = avg_sentence_length(test2summarize)
-          openAI_summary_str = "Retrived from Database"
+          if not openAI_summary_JSON:
+            openAI_summary_str = "Retrived from Database"
+          else:
+            openAI_summary_str = json.dumps(openAI_summary_JSON, indent=4)   
           return render_template(
             'summarizePDF.html',
             title='Summarize PDF',
@@ -426,7 +443,7 @@ def openAI_debug():
         return render_template('openai-debug.html', title='openAI-debug', form=form, openai_key = os.getenv("OPENAI_API_KEY"))
 
 
-
+# -------------------- OpenAI API Functions --------------------
 
 def openAI_summarize_debug(form_openai_key, form_prompt):
     openai.api_key = form_openai_key
@@ -497,6 +514,8 @@ def openAI_summarize_chunk(form_prompt):
         global_number_of_chunks = 1
         return response, is_trimmed, form_prompt, global_number_of_chunks
 
+# -------------------- Database Operations --------------------
+
 # function to check if the hash of test2summarize is already in the database then retun
 def check_if_hash_exists(test2summarize_hash):
   entry = Entry_Post.query.filter_by(test2summarize_hash=test2summarize_hash).first()
@@ -534,3 +553,40 @@ def delete_entry_from_db(entry_id):
     return True
   else:
     return False
+  
+# -------------------- File Operations --------------------
+
+#given the filename and json contents, write to file and save it to os.path.join(app.config['UPLOAD_FOLDER'], filename)
+def write_to_file(filename, json_contents):
+  if (app.config['WRITE_JSON_LOCALLY'] == 'False'):
+    return True
+  else:
+  #wrap in try catch
+    try:
+      with open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'w') as f:
+        json.dump(json_contents, f)
+      return True
+    except:
+      return False
+
+#Given the filename, read the file and return the contents, wrap it in try catch
+def read_from_file(filename):
+  if (app.config['WRITE_JSON_LOCALLY'] == 'False'):
+    return False
+  else:
+    try:
+      with open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'r') as f:
+        json_contents = json.load(f)
+      return json_contents
+    except:
+      return False
+    
+#check if folder os.path.join(app.config['UPLOAD_FOLDER'] exists, if not create it
+def check_folder_exists():
+  try:
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+      os.makedirs(app.config['UPLOAD_FOLDER'])
+    return True
+  except:
+    return False
+
