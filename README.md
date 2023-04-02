@@ -1,55 +1,56 @@
-# summarize4me
+# Summarize4Me
 
-Using Generative AI and Python Flask to Summarize Text, Web Pages and PDF files.
+Leverage Generative AI and Python Flask to effortlessly summarize text, web pages, and PDF files.
 
-# --- Work in Progress --- 
+## 🚧 Work in Progress 🚧
 
-### Features that work:
-- **Summarize From Text and URL** 
-- **Unlimited Token Support with Chunking:** Say goodbye to token size limits! Our new chunking feature allows you to summarize any length of text or URL seamlessly, providing a consistent and efficient experience.
-- **Hash-Based Database Storage for Faster Retrieval:** We've optimized the retrieval process by storing the hash of the text being summarized in our database. This enables quicker access to existing summaries, saving you time and effort.
-- **Saving the data to a local SQLite file** saves all files to a local sqlite file
-- **Stats for nerds** Displaying additional stats and raw JSON output
-- **Dark Mode Support** 
+### ✅ Implemented Features:
+- **Summarize Text and URLs:** Easily summarize content from plain text or web pages.
+- **Unlimited Token Support with Chunking:** No more token size limits! The chunking feature allows seamless summarization of any length of text or URL, providing a smooth and efficient experience.
+- **Hash-Based Database Storage for Fast Retrieval:** Optimize the retrieval process by storing the text's hash in our database, allowing for quicker access to existing summaries and saving time.
+- **Local SQLite File Storage:** Automatically save all files to a local SQLite file.
+- **Stats for Nerds:** Display additional statistics and raw JSON output.
+- **Dark Mode Support:** Enhance your experience with our dark mode feature.
 
-### Features to be added:
+### 🔜 Upcoming Features:
 
-- Extract Text from a PDF file and Summarize it
-- Privacy Notice
-- Enable Sessions
-- SPAM Protection
-- Integration of Additional LLMs (by Google for example)
+- Summarize text extracted from PDF files.
+- Add a Privacy Notice.
+- Enable Session Management.
+- Implement SPAM Protection.
+- Integrate additional LLMs (e.g., Google-based models).
 
-## Installation
+## 💻 Installation
 
-- Create a new Python virtual environment (venv) or a new conda environment
-- Activate your new Python virtual environment
-  
+1. [Create and activate a new Python virtual environment (venv) or a new conda environment.](/docs/new-virtual-python-env.md)
 
-- Clone this repo:
-```shell
-git clone git@github.com:satishsurath/summarize4me.git
-```
-- Add OpenAI API Key in as an environment variable:
+   
+2. Clone this repository:
+   ```shell
+   git clone git@github.com:satishsurath/summarize4me.git
+    ```
+
+3. Set up your OpenAI API Key as an environment variable:
 ```shell
 export OPENAI_API_KEY=[YOUR-OPENAI_API_KEY-HERE]
 ```
-- Setup your admin username and password to access the logs:
+4. Configure your admin username and password for log access:
 ```shell
 export summarizeMeUser=[YOUR ADMIN USERNAME HERE]
 export summarizeMePassword=[YOUR ADMIN PASSWORD HERE]
 ```
-- Install all the Python dependencies in your environment:
+
+5. Install all Python dependencies in your environment:
 ```shell
 pip install -r requirements.txt
 ```
-- Initialize the Database 
+6. Initialize the Database 
 ```shell
 flask db init
 flask db migrate -m "entry_post table"
 flask db upgrade
 ```
-- Congratulations! You are ready to run your Flask App!
+7. Congratulations! You are ready to run your Flask App!
 ```shell
 flask run
 ```
