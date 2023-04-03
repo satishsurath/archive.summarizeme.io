@@ -1,8 +1,8 @@
 import sys, os
-INTERP = os.path.join(os.environ['HOME'], 'ai.sati.sh', 'venv', 'bin', 'python3')
+INTERP = os.path.join(os.environ['HOME'], 'summarizeme.io', 'venv', 'bin', 'python3')
 
 #If we are not in Production - then it loads the Python Path from the .env file
-if os.environ['HOME'] != '/home/dh_4q9r9f':
+if os.environ['HOME'] != '/home/dh_hjy3j9':
     from dotenv import load_dotenv
     load_dotenv()
     if (os.environ.get('INTERP')):

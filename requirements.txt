@@ -51,7 +51,7 @@ cycler
 cytoolz
 dask
 datashader
-datashape==0.5.4
+datashape
 dateparser==1.1.7
 debugpy
 decorator
@@ -233,10 +233,6 @@ PyJWT==2.6.0
 pylint
 pylint-venv
 pyls-spyder==0.4.0
-pyobjc-core
-pyobjc-framework-Cocoa
-pyobjc-framework-CoreServices
-pyobjc-framework-FSEvents
 pyodbc
 pyOpenSSL
 pyparsing
@@ -300,7 +296,7 @@ statsmodels
 sympy
 tables
 tabulate
-TBB==0.2
+TBB
 tblib
 tenacity
 terminado
@@ -349,10 +345,10 @@ wurlitzer
 xarray
 xlwings
 yapf
-yarl==1.8.2
-zict==2.1.0
+yarl
+zict
 zipp
-zope.event==4.6
+zope.event
 zope.interface
 email_validator
 flask
@@ -369,3 +365,4 @@ requests
 tiktoken
 trafilatura
 pdfminer.six
+flask-session
