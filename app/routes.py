@@ -119,6 +119,10 @@ global_pdf_filename = ""
 def index():
     return render_template('index.html')
 
+@app.route('/privacy-policy')
+def privacypolicy():
+    return render_template('privacy.html')
+
 @app.route('/summarizeText', methods=['GET', 'POST'])
 def summarizeText():
     form = SummarizeFromText()

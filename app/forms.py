@@ -8,11 +8,18 @@ from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 class SummarizeFromText(FlaskForm):
     summarize = StringField('Paste / type the text to summarize below:', widget=TextArea(), validators=[DataRequired()])
+    accept_terms = BooleanField('I accept the Terms of Use and Privacy Policy', validators=[DataRequired()])
     submit = SubmitField('Summarize')
 
 class SummarizeFromURL(FlaskForm):
     summarize = URLField('Paste / type the URL of the webpage to summarize below:', validators=[DataRequired(), URL(message='Please enter a valid URL.')])
+    accept_terms = BooleanField('I accept the Terms of Use and Privacy Policy', validators=[DataRequired()])
     submit = SubmitField('Summarize')
+
+class UploadPDFForm(FlaskForm):
+    pdf = FileField('Upload PDF', validators=[FileRequired(), FileAllowed(['pdf'], 'PDF files only')])
+    accept_terms = BooleanField('I accept the Terms of Use and Privacy Policy', validators=[DataRequired()])
+    submit = SubmitField('Summarize PDF file')
 
 class openAI_debug_form(FlaskForm):
     openAI_debug_form_key = StringField('Paste your OpenAI API Key (will not be saved)')
@@ -23,7 +30,4 @@ class openAI_debug_form(FlaskForm):
 class DeleteEntry(FlaskForm):
     submit = SubmitField('Delete') 
 
-class UploadPDFForm(FlaskForm):
-    pdf = FileField('Upload PDF', validators=[FileRequired(), FileAllowed(['pdf'], 'PDF files only')])
-    submit = SubmitField('Summarize PDF file')
 

@@ -11,6 +11,11 @@
             {% for error in form.summarize.errors %}
             <span style="color: red;">[{{ error }}]</span>
             {% endfor %}
+            <br>        
+            {{ form.accept_terms }} I accept the <a href="/privacy-policy" target="_blank">Privacy Policy</a> and Terms of Use<br>
+            {% for error in form.accept_terms.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}                
         </p>
         <p>{{ form.submit() }}</p>
         <div id="processing" style="display:none; font-weight:bold;">Processing<span id="dots"></span></div>
