@@ -8,4 +8,8 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'app/static/uploads'
     WRITE_JSON_LOCALLY = True
-
+    # Configure session options
+    SESSION_TYPE = 'filesystem'
+    SESSION_FILE_DIR = './sessions'
+    SESSION_FILE_THRESHOLD = 100
+    SESSION_PERMANENT = False

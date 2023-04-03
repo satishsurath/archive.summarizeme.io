@@ -6,7 +6,7 @@ import tiktoken
 import nltk
 import hashlib
 from nltk.tokenize import sent_tokenize
-from app import app, db, login_manager
+from app import app, db, login_manager, session
 from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, DeleteEntry, UploadPDFForm
 from app.models import Entry_Post
 from flask import render_template, flash, redirect, url_for, request

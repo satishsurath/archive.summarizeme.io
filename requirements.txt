@@ -84,6 +84,7 @@ Flask-JWT-Extended==4.4.4
 Flask-Login==0.6.2
 Flask-Mail==0.9.1
 Flask-Migrate==4.0.4
+Flask-Session
 Flask-SQLAlchemy==3.0.3
 Flask-SSLify==0.1.5
 Flask-Turnstile==0.1.1
