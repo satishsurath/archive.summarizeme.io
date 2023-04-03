@@ -27,12 +27,16 @@ body.dark-mode {
   text-decoration: none;
 }
 
+a {
+  color: var(--text-color);
+}
+
 .nav-links a:hover {
   text-decoration: underline;
 }
 
 body.dark-mode .nav-links a,
-body.dark-mode .nav-links a:hover {
+body.dark-mode .nav-links a:hover a {
   color: #edf1fb;
 }
 
