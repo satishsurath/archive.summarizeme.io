@@ -5,7 +5,6 @@ import trafilatura
 import tiktoken
 import nltk
 import hashlib
-nltk.download('punkt')
 from nltk.tokenize import sent_tokenize
 from app import app, db, login_manager
 from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, DeleteEntry, UploadPDFForm
@@ -93,7 +92,7 @@ def request_loader(request):
 # -------------------- Flask app configurations --------------------
 app.jinja_env.filters['nl2br'] = nl2br
 openai.api_key = os.getenv("OPENAI_API_KEY")
-
+nltk.download('punkt')
 
 # -------------------- Global variables --------------------
 
@@ -119,16 +118,8 @@ def index():
 @app.route('/summarizeText', methods=['GET', 'POST'])
 def summarizeText():
     form = SummarizeFromText()
-    global openAI_summary
-    global openAI_summary_JSON
-    global test2summarize
-    global url
+    global openAI_summary, openAI_summary_JSON, test2summarize, url, global_is_trimmed, global_form_prompt, global_number_of_chunks, content_written
     url = ""
-    global global_is_trimmed
-    global global_form_prompt
-    global global_prompt
-    global global_number_of_chunks
-    global content_written
     if not content_written:
       if form.validate_on_submit():
         test2summarize = form.summarize.data
@@ -196,20 +187,10 @@ def summarizeText():
         content_written = False
         return render_template('summarizeText.html', title='Summarize From Text', form=form)
 
-
-
-
 @app.route('/summarizeURL', methods=['GET', 'POST'])
 def summarizeURL():
     form = SummarizeFromURL()
-    global openAI_summary
-    global openAI_summary_JSON
-    global test2summarize
-    global url
-    global global_is_trimmed
-    global global_form_prompt
-    global global_number_of_chunks
-    global content_written
+    global openAI_summary, openAI_summary_JSON, test2summarize, url, global_is_trimmed, global_form_prompt, global_number_of_chunks, content_written
     if not content_written:
       if form.validate_on_submit():
         newconfig = use_config()
@@ -291,15 +272,7 @@ def summarizeURL():
 def summarizePDF():
     print("summarizePDF - 1")
     form = UploadPDFForm()
-    global openAI_summary
-    global openAI_summary_JSON
-    global test2summarize
-    global url
-    global global_is_trimmed
-    global global_form_prompt
-    global global_number_of_chunks
-    global content_written
-    global global_pdf_filename
+    global openAI_summary, openAI_summary_JSON, test2summarize, url, global_is_trimmed, global_form_prompt, global_number_of_chunks, content_written, global_pdf_filename
     if not content_written:
       if form.validate_on_submit():
         # Get the uploaded PDF file
@@ -390,7 +363,6 @@ def summarizePDF():
       )
 
 
-
 # Routes for the login and logout pages
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -460,7 +432,6 @@ def openAI_summarize_debug(form_openai_key, form_prompt):
     print(json.dumps(response, indent=4)) 
     return response
 
-
 # Functions to call the OpenAI API
 def openAI_summarize_chunk(form_prompt):
     # Count tokens in the form_prompt
@@ -483,6 +454,8 @@ def openAI_summarize_chunk(form_prompt):
             form_prompt_chunks.append(temp_prompt.strip())
         is_trimmed = True
         completed_messages = []
+        openai_responses = []
+        total_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
         for chunk in form_prompt_chunks:
             message = {"role": "user", "content": global_prompt + chunk}
             response = openai.ChatCompletion.create(
@@ -495,12 +468,18 @@ def openAI_summarize_chunk(form_prompt):
                 presence_penalty=1
             )
             completed_messages.extend(response["choices"][0]['message']['content'].split('\n')[:-1])
+            openai_responses.append(response)
+            for key in total_usage:
+                total_usage[key] += response["usage"][key]
         completed_messages.append(response["choices"][0]['message']['content'].split('\n')[-1])
-        openai_response = {"choices": [{"message": {"content": '\n'.join(completed_messages)}}]}
+        openai_response = openai_responses[-1].copy()
+        openai_response["choices"] = [{"message": {"content": '\n'.join(completed_messages)}}]
+        openai_response["usage"] = total_usage
         global_number_of_chunks = len(form_prompt_chunks)
         return openai_response, is_trimmed, form_prompt, global_number_of_chunks
     else:
-        #print("prompt is not trimmed")
+        # The prompt is not too long (its within the max token limit), so we can just call the API
+        # print("prompt is not trimmed")
         message = {"role": "user", "content": global_prompt + form_prompt}
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -518,40 +497,54 @@ def openAI_summarize_chunk(form_prompt):
 
 # function to check if the hash of test2summarize is already in the database then retun
 def check_if_hash_exists(test2summarize_hash):
-  entry = Entry_Post.query.filter_by(test2summarize_hash=test2summarize_hash).first()
-  if entry:
-    return True
-  else:
+  try:
+    entry = Entry_Post.query.filter_by(test2summarize_hash=test2summarize_hash).first()
+    if entry:
+      return True
+    else:
+      return False
+  except:
     return False
 
 # function to return the Summary if the hash of test2summarize is already in the database
 def get_summary_from_hash(test2summarize_hash):
   entry = Entry_Post.query.filter_by(test2summarize_hash=test2summarize_hash).first()
   if entry:
-    return entry.openAIsummary
+    if entry.openAIsummary == None:
+      return False
+    else:
+      return entry.openAIsummary
   else:
     return False
 
 # Function to write to the database
 def write_to_db(posttype, url, test2summarizedb, openAIsummarydb):
   global content_written
-  if not content_written:
-      test2summarize_hash = hashlib.sha256(test2summarizedb.encode('utf-8')).hexdigest()
-      entry = Entry_Post(posttype=posttype, url=url, test2summarize=test2summarizedb, openAIsummary=openAIsummarydb, test2summarize_hash=test2summarize_hash)
-      db.session.add(entry)
-      db.session.commit()
-      db.session.close()
-      content_written = True
+  try:
+      if not content_written:
+          test2summarize_hash = hashlib.sha256(test2summarizedb.encode('utf-8')).hexdigest()
+          entry = Entry_Post(posttype=posttype, url=url, test2summarize=test2summarizedb, openAIsummary=openAIsummarydb, test2summarize_hash=test2summarize_hash)
+          db.session.add(entry)
+          db.session.commit()
+          db.session.close()
+          content_written = True
+          return True
+  except:
+      print("Error occurred. Could not write to database.")
+      return False
 
 # delete_entry_from_db(entry_id)
 def delete_entry_from_db(entry_id):
-  entry = Entry_Post.query.filter_by(id=entry_id).first()
-  if entry:
-    db.session.delete(entry)
-    db.session.commit()
-    db.session.close()
-    return True
-  else:
+  try:
+    entry = Entry_Post.query.filter_by(id=entry_id).first()
+    if entry:
+      db.session.delete(entry)
+      db.session.commit()
+      db.session.close()
+      return True
+    else:
+      return False
+  except:
     return False
   
 # -------------------- File Operations --------------------
