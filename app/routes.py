@@ -6,10 +6,10 @@ import tiktoken
 import nltk
 import hashlib
 from nltk.tokenize import sent_tokenize
-from app import app, db, login_manager, session
+from app import app, db, login_manager
 from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, DeleteEntry, UploadPDFForm
 from app.models import Entry_Post
-from flask import render_template, flash, redirect, url_for, request
+from flask import render_template, flash, redirect, url_for, request, session
 from trafilatura import extract
 from trafilatura.settings import use_config
 from flask_sqlalchemy import SQLAlchemy
@@ -108,252 +108,333 @@ content_written = False
 global_pdf_filename = ""
 
 
+# -------------------- Session variables --------------------
+
+
+
+
 # -------------------- Routes --------------------
 @app.route('/')
 @app.route('/index')
 def index():
     return render_template('index.html')
 
-
 @app.route('/summarizeText', methods=['GET', 'POST'])
 def summarizeText():
     form = SummarizeFromText()
-    global openAI_summary, openAI_summary_JSON, test2summarize, url, global_is_trimmed, global_form_prompt, global_number_of_chunks, content_written
-    url = ""
-    if not content_written:
-      if form.validate_on_submit():
-        test2summarize = form.summarize.data
-        test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
-        #check if the hash exists in the Local Database, before calling the OpenAI API
-        if check_if_hash_exists(test2summarize_hash):
-          openAI_summary = get_summary_from_hash(test2summarize_hash)
-          openAI_summary_JSON = read_from_file(test2summarize_hash+".json")
-          global_is_trimmed = False
-          global_form_prompt = test2summarize
-          global_number_of_chunks = "Retrived from Database"
+    if not session.get('content_written', False):
+        if form.validate_on_submit():
+            test2summarize = form.summarize.data
+            test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
+
+            if check_if_hash_exists(test2summarize_hash):
+                openAI_summary = get_summary_from_hash(test2summarize_hash)
+                openAI_summary_JSON = read_from_file(test2summarize_hash + ".json")
+                session['is_trimmed'] = False
+                session['form_prompt'] = test2summarize
+                session['number_of_chunks'] = "Retrieved from Database"
+            else:
+                openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(test2summarize)
+                openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
+
+            session['openAI_summary'] = openAI_summary
+            session['openAI_summary_JSON'] = openAI_summary_JSON
+            session['test2summarize'] = test2summarize
+            session['url'] = ""
+
+            return redirect(url_for('summarizeText'))
+
+        if session.get('openAI_summary'):
+            test2summarize = session.get('test2summarize')
+            test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
+
+            if not check_if_hash_exists(test2summarize_hash):
+                write_to_db(0, "0", test2summarize, session['openAI_summary'])
+                token_count = num_tokens_from_string(test2summarize)
+                avg_tokens_per_sentence = avg_sentence_length(test2summarize)
+                openAI_summary_str = json.dumps(session['openAI_summary_JSON'], indent=4)
+                write_to_file(test2summarize_hash + ".json", session['openAI_summary_JSON'])
+            else:
+                token_count = num_tokens_from_string(test2summarize)
+                avg_tokens_per_sentence = avg_sentence_length(test2summarize)
+                if not session['openAI_summary_JSON']:
+                    openAI_summary_str = "Retrieved from Database"
+                else:
+                    openAI_summary_str = json.dumps(session['openAI_summary_JSON'], indent=4)
+
+            return render_template(
+                'summarizeText.html',
+                title='Summarize From Text',
+                form=form,
+                test2summarize=test2summarize.split('\n'),
+                openAI_summary=session['openAI_summary'].split('\n'),
+                token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence,
+                openAI_json=openAI_summary_str,
+                is_trimmed=session['is_trimmed'],
+                form_prompt_nerds=session['form_prompt'],
+                number_of_chunks=session['number_of_chunks']
+            )
         else:
-          openAI_summary_JSON, global_is_trimmed, global_form_prompt, global_number_of_chunks = openAI_summarize_chunk(test2summarize)
-          openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
-        return redirect(url_for('summarizeText'))
-      
-      #Now that we have the summary, we can render the page
-      if (openAI_summary):
-        test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
-         # If we calculated the summary with OpenAI API, we need to write it to the database
-        if not check_if_hash_exists(test2summarize_hash):
-          write_to_db(0,"0",test2summarize,openAI_summary)          
-          # Calculate token count and average tokens per sentence
-          token_count = num_tokens_from_string(test2summarize)
-          avg_tokens_per_sentence = avg_sentence_length(test2summarize) 
-          openAI_summary_str = json.dumps(openAI_summary_JSON, indent=4)
-          write_to_file(test2summarize_hash+".json",openAI_summary_JSON)               
-          return render_template(
-            'summarizeText.html', 
-            title='Summarize From Text', 
-            form=form,
-            test2summarize=test2summarize.split('\n'), 
-            openAI_summary=openAI_summary.split('\n'),  
-            token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence, 
-            openAI_json=openAI_summary_str, 
-            is_trimmed=global_is_trimmed, 
-            form_prompt_nerds=global_form_prompt,
-            number_of_chunks=global_number_of_chunks
-          )
-        else:
-          # the summary was retrieved from the database, so we don't need to write it to DB again
-          # Calculate token count and average tokens per sentence
-          token_count = num_tokens_from_string(test2summarize)
-          avg_tokens_per_sentence = avg_sentence_length(test2summarize) 
-          if not openAI_summary_JSON:
-            openAI_summary_str = "Retrived from Database"
-          else:
-            openAI_summary_str = json.dumps(openAI_summary_JSON, indent=4)    
-          return render_template(
-            'summarizeText.html', 
-            title='Summarize From Text', 
-            form=form,
-            test2summarize=test2summarize.split('\n'), 
-            openAI_summary=openAI_summary.split('\n'),  
-            token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence, 
-            openAI_json=openAI_summary_str, 
-            is_trimmed=global_is_trimmed, 
-            form_prompt_nerds=global_form_prompt,
-            number_of_chunks=global_number_of_chunks
-          )
-      else:
-        content_written = False
-        return render_template('summarizeText.html', title='Summarize From Text', form=form)
+            session['content_written'] = False
+            return render_template('summarizeText.html', title='Summarize From Text', form=form)
     else:
-        content_written = False
+        session['content_written'] = False
         return render_template('summarizeText.html', title='Summarize From Text', form=form)
+
+# @app.route('/summarizeText', methods=['GET', 'POST'])
+# def summarizeText():
+#     form = SummarizeFromText()
+#     global openAI_summary, openAI_summary_JSON, test2summarize, url, global_is_trimmed, global_form_prompt, global_number_of_chunks, content_written
+#     url = ""
+#     if not content_written:
+#       if form.validate_on_submit():
+#         test2summarize = form.summarize.data
+#         test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
+#         #check if the hash exists in the Local Database, before calling the OpenAI API
+#         if check_if_hash_exists(test2summarize_hash):
+#           openAI_summary = get_summary_from_hash(test2summarize_hash)
+#           openAI_summary_JSON = read_from_file(test2summarize_hash+".json")
+#           global_is_trimmed = False
+#           global_form_prompt = test2summarize
+#           global_number_of_chunks = "Retrived from Database"
+#         else:
+#           openAI_summary_JSON, global_is_trimmed, global_form_prompt, global_number_of_chunks = openAI_summarize_chunk(test2summarize)
+#           openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
+#         return redirect(url_for('summarizeText'))
+      
+#       #Now that we have the summary, we can render the page
+#       if (openAI_summary):
+#         test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
+#          # If we calculated the summary with OpenAI API, we need to write it to the database
+#         if not check_if_hash_exists(test2summarize_hash):
+#           write_to_db(0,"0",test2summarize,openAI_summary)          
+#           # Calculate token count and average tokens per sentence
+#           token_count = num_tokens_from_string(test2summarize)
+#           avg_tokens_per_sentence = avg_sentence_length(test2summarize) 
+#           openAI_summary_str = json.dumps(openAI_summary_JSON, indent=4)
+#           write_to_file(test2summarize_hash+".json",openAI_summary_JSON)               
+#           return render_template(
+#             'summarizeText.html', 
+#             title='Summarize From Text', 
+#             form=form,
+#             test2summarize=test2summarize.split('\n'), 
+#             openAI_summary=openAI_summary.split('\n'),  
+#             token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence, 
+#             openAI_json=openAI_summary_str, 
+#             is_trimmed=global_is_trimmed, 
+#             form_prompt_nerds=global_form_prompt,
+#             number_of_chunks=global_number_of_chunks
+#           )
+#         else:
+#           # the summary was retrieved from the database, so we don't need to write it to DB again
+#           # Calculate token count and average tokens per sentence
+#           token_count = num_tokens_from_string(test2summarize)
+#           avg_tokens_per_sentence = avg_sentence_length(test2summarize) 
+#           if not openAI_summary_JSON:
+#             openAI_summary_str = "Retrived from Database"
+#           else:
+#             openAI_summary_str = json.dumps(openAI_summary_JSON, indent=4)    
+#           return render_template(
+#             'summarizeText.html', 
+#             title='Summarize From Text', 
+#             form=form,
+#             test2summarize=test2summarize.split('\n'), 
+#             openAI_summary=openAI_summary.split('\n'),  
+#             token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence, 
+#             openAI_json=openAI_summary_str, 
+#             is_trimmed=global_is_trimmed, 
+#             form_prompt_nerds=global_form_prompt,
+#             number_of_chunks=global_number_of_chunks
+#           )
+#       else:
+#         content_written = False
+#         return render_template('summarizeText.html', title='Summarize From Text', form=form)
+#     else:
+#         content_written = False
+#         return render_template('summarizeText.html', title='Summarize From Text', form=form)
 
 @app.route('/summarizeURL', methods=['GET', 'POST'])
 def summarizeURL():
     form = SummarizeFromURL()
-    global openAI_summary, openAI_summary_JSON, test2summarize, url, global_is_trimmed, global_form_prompt, global_number_of_chunks, content_written
-    if not content_written:
+    #global openAI_summary, openAI_summary_JSON, test2summarize, url, global_is_trimmed, global_form_prompt, global_number_of_chunks, content_written
+    if not session.get('content_written', False):
       if form.validate_on_submit():
         newconfig = use_config()
         newconfig.set("DEFAULT", "EXTRACTION_TIMEOUT", "0")
         downloaded = trafilatura.fetch_url(form.summarize.data)
-        url = form.summarize.data
+        session['url'] = form.summarize.data
         test2summarize = extract(downloaded, config=newconfig)
         test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
         #check if the hash exists in the Local Database, before calling the OpenAI API
         if check_if_hash_exists(test2summarize_hash):
           openAI_summary = get_summary_from_hash(test2summarize_hash)
           openAI_summary_JSON = read_from_file(test2summarize_hash+".json")
-          global_is_trimmed = False
-          global_form_prompt = test2summarize
-          global_number_of_chunks = "Retrived from Database"
+          session['is_trimmed'] = False
+          session['form_prompt'] = test2summarize
+          session['number_of_chunks'] = "Retrieved from Database"
         else:
-          openAI_summary_JSON, global_is_trimmed, global_form_prompt, global_number_of_chunks = openAI_summarize_chunk(test2summarize)
+          openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(test2summarize)
           openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
-          write_to_file(test2summarize_hash+".json",openAI_summary_JSON)          
+          write_to_file(test2summarize_hash+".json",openAI_summary_JSON)  
+        session['openAI_summary_URL'] = openAI_summary
+        session['openAI_summary_URL_JSON'] = openAI_summary_JSON
+        session['test2summarize_URL'] = test2summarize
+        session['url'] = form.summarize.data                
         return redirect(url_for('summarizeURL'))
-      
       #Now that we have the summary, we can render the page
-      if (openAI_summary):
-        test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
-         # If we calculated the summary with OpenAI API, we need to write it to the database
+      if session.get('openAI_summary_URL'):
+        test2summarize = session.get('test2summarize_URL')
+        test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()        
+        #test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
+        # If we calculated the summary with OpenAI API, we need to write it to the database
         if not check_if_hash_exists(test2summarize_hash):
-          write_to_db(1,url,test2summarize,openAI_summary)
+          write_to_db(1,session['url'],test2summarize,session['openAI_summary_URL'])
+          session['content_written'] = True
           # Calculate token count and average tokens per sentence
           token_count = num_tokens_from_string(test2summarize)
           avg_tokens_per_sentence = avg_sentence_length(test2summarize)
-          openAI_summary_str = json.dumps(openAI_summary_JSON, indent=4)
+          openAI_summary_str = json.dumps(session['openAI_summary_URL_JSON'], indent=4)
           return render_template(
             'summarizeURL.html',
             title='Summarize From URL',
             form=form,
-            test2summarize=test2summarize.split('\n'),
-            openAI_summary=openAI_summary.split('\n'),
+            test2summarize=session['test2summarize_URL'].split('\n'),
+            openAI_summary=session['openAI_summary_URL'].split('\n'),
             token_count=token_count,
             avg_tokens_per_sentence=avg_tokens_per_sentence,
             openAI_json=openAI_summary_str,
-            is_trimmed=global_is_trimmed,
-            form_prompt_nerds=global_form_prompt,
-            number_of_chunks=global_number_of_chunks
+            is_trimmed=session['is_trimmed'],
+            form_prompt_nerds=session['form_prompt'],
+            number_of_chunks=session['number_of_chunks']
           )
         else:
           # the summary was retrieved from the database, so we don't need to write it to DB again
           # Calculate token count and average tokens per sentence
           token_count = num_tokens_from_string(test2summarize)
           avg_tokens_per_sentence = avg_sentence_length(test2summarize)
-          if not openAI_summary_JSON:
+          if not session.get('openAI_summary_JSON_URL', None):
             openAI_summary_str = "Retrived from Database"
           else:
-            openAI_summary_str = json.dumps(openAI_summary_JSON, indent=4)   
+            openAI_summary_str = json.dumps(session['openAI_summary_JSON_URL'], indent=4)   
           return render_template(
             'summarizeURL.html',
             title='Summarize From URL',
             form=form,
             test2summarize=test2summarize.split('\n'),
-            openAI_summary=openAI_summary.split('\n'),
+            openAI_summary=session['openAI_summary_URL'].split('\n'),
             token_count=token_count,
             avg_tokens_per_sentence=avg_tokens_per_sentence,
             openAI_json=openAI_summary_str,
-            is_trimmed=global_is_trimmed,
-            form_prompt_nerds=global_form_prompt,
-            number_of_chunks=global_number_of_chunks
+            is_trimmed=session['is_trimmed'],
+            form_prompt_nerds=session['form_prompt'],
+            number_of_chunks=session['number_of_chunks']
           )
       else:
-        content_written = False
+        session['content_written'] = False
         return render_template('summarizeURL.html', title='Summarize From URL', form=form)
     else:
-      content_written = False
+      session['content_written'] = False
       return render_template(
         'summarizeURL.html',
         title='Summarize From URL',
         form=form
       )
 
+
 @app.route('/summarizePDF', methods=['GET', 'POST'])
 def summarizePDF():
     print("summarizePDF - 1")
     form = UploadPDFForm()
-    global openAI_summary, openAI_summary_JSON, test2summarize, url, global_is_trimmed, global_form_prompt, global_number_of_chunks, content_written, global_pdf_filename
-    if not content_written:
-      if form.validate_on_submit():
-        # Get the uploaded PDF file
-        pdf_file = form.pdf.data
+    if not session.get('content_written', False):
+        if form.validate_on_submit():
+            # Get the uploaded PDF file
+            pdf_file = form.pdf.data
 
-        # Read the PDF contents
-        test2summarize = extract_text(BytesIO(pdf_file.read()))        
-        test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()   
-        
-        # Save the PDF file to the uploads folder
-        filename = secure_filename(test2summarize_hash + pdf_file.filename)
-        global_pdf_filename = filename
-        pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            # Read the PDF contents
+            test2summarize = extract_text(BytesIO(pdf_file.read()))
+            test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
 
-        # Seek to the beginning of the file before saving, then save the file        
-        pdf_file.seek(0)
-        #check if folder exists:
-        if check_folder_exists():  
-          pdf_file.save(pdf_path)
+            # Save the PDF file to the uploads folder
+            filename = secure_filename(test2summarize_hash + pdf_file.filename)
+            session['pdf_filename'] = filename
+            pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
-        #check if the hash exists in the Local Database, before calling the OpenAI API
-        if check_if_hash_exists(test2summarize_hash):
-          openAI_summary = get_summary_from_hash(test2summarize_hash)
-          openAI_summary_JSON = read_from_file(test2summarize_hash+".json")
-          global_is_trimmed = False
-          global_form_prompt = test2summarize
-          global_number_of_chunks = "Retrived from Database"
+            # Seek to the beginning of the file before saving, then save the file
+            pdf_file.seek(0)
+            # Check if folder exists:
+            if check_folder_exists():
+                pdf_file.save(pdf_path)
+
+            # Check if the hash exists in the Local Database, before calling the OpenAI API
+            if check_if_hash_exists(test2summarize_hash):
+                openAI_summary = get_summary_from_hash(test2summarize_hash)
+                openAI_summary_JSON = read_from_file(test2summarize_hash + ".json")
+                session['is_trimmed'] = False
+                session['form_prompt'] = test2summarize
+                session['number_of_chunks'] = "Retrieved from Database"
+            else:
+                openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(test2summarize)
+                openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
+                write_to_file(test2summarize_hash + ".json", openAI_summary_JSON)
+
+            session['openAI_summary_PDF'] = openAI_summary
+            session['openAI_summary_JSON_PDF'] = openAI_summary_JSON
+            session['test2summarize_PDF'] = test2summarize
+
+            return redirect(url_for('summarizePDF'))
+
+        # Now that we have the summary, we can render the page
+        if session.get('openAI_summary_PDF'):
+            test2summarize = session.get('test2summarize_PDF')
+            test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
+
+            # If we calculated the summary with OpenAI API, we need to write it to the database
+            if not check_if_hash_exists(test2summarize_hash):
+                write_to_db(2, session['pdf_filename'], test2summarize, session['openAI_summary_PDF'])
+
+                # Calculate token count and average tokens per sentence
+                token_count = num_tokens_from_string(test2summarize)
+                avg_tokens_per_sentence = avg_sentence_length(test2summarize)
+                openAI_summary_str = json.dumps(session['openAI_summary_JSON_PDF'], indent=4)
+
+                return render_template(
+                    'summarizePDF.html',
+                    title='Summarize PDF',
+                    form=form,
+                    test2summarize=test2summarize.split('\n'),
+                    openAI_summary=session['openAI_summary_PDF'].split('\n'),
+                    token_count=token_count,
+                    avg_tokens_per_sentence=avg_tokens_per_sentence,
+                    openAI_json=openAI_summary_str,
+                    is_trimmed=session['is_trimmed'],
+                    form_prompt_nerds=session['form_prompt'],
+                    number_of_chunks=session['form_prompt']
+                  )
+            else:
+              #the summary was retrieved from the database, so we don't need to write it to DB again
+              # Calculate token count and average tokens per sentence
+              token_count = num_tokens_from_string(test2summarize)
+              avg_tokens_per_sentence = avg_sentence_length(test2summarize)
+              if not session['openAI_summary_JSON_PDF']:
+                openAI_summary_str = "Retrived from Database"
+              else:
+                openAI_summary_str = json.dumps(session['openAI_summary_JSON_PDF'], indent=4)   
+              return render_template(
+                'summarizePDF.html',
+                title='Summarize PDF',
+                form=form,
+                test2summarize=test2summarize.split('\n'),
+                openAI_summary=session['openAI_summary_PDF'].split('\n'),
+                token_count=token_count,
+                avg_tokens_per_sentence=avg_tokens_per_sentence,
+                openAI_json=openAI_summary_str,
+                is_trimmed=session['is_trimmed'],
+                form_prompt_nerds=session['form_prompt'],
+                number_of_chunks=session['form_prompt']
+              )
         else:
-          openAI_summary_JSON, global_is_trimmed, global_form_prompt, global_number_of_chunks = openAI_summarize_chunk(test2summarize)
-          openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
-          write_to_file(test2summarize_hash+".json",openAI_summary_JSON)
-        return redirect(url_for('summarizePDF'))
-      
-      #Now that we have the summary, we can render the page
-      if (openAI_summary):
-        test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
-        # If we calculated the summary with OpenAI API, we need to write it to the database
-        if not check_if_hash_exists(test2summarize_hash):
-          write_to_db(2,global_pdf_filename,test2summarize,openAI_summary)
-          # Calculate token count and average tokens per sentence
-          token_count = num_tokens_from_string(test2summarize)
-          avg_tokens_per_sentence = avg_sentence_length(test2summarize)
-          openAI_summary_str = json.dumps(openAI_summary_JSON, indent=4)
-          return render_template(
-            'summarizePDF.html',
-            title='Summarize PDF',
-            form=form,
-            test2summarize=test2summarize.split('\n'),
-            openAI_summary=openAI_summary.split('\n'),
-            token_count=token_count,
-            avg_tokens_per_sentence=avg_tokens_per_sentence,
-            openAI_json=openAI_summary_str,
-            is_trimmed=global_is_trimmed,
-            form_prompt_nerds=global_form_prompt,
-            number_of_chunks=global_number_of_chunks
-          )
-        else:
-          # the summary was retrieved from the database, so we don't need to write it to DB again
-          # Calculate token count and average tokens per sentence
-          token_count = num_tokens_from_string(test2summarize)
-          avg_tokens_per_sentence = avg_sentence_length(test2summarize)
-          if not openAI_summary_JSON:
-            openAI_summary_str = "Retrived from Database"
-          else:
-            openAI_summary_str = json.dumps(openAI_summary_JSON, indent=4)   
-          return render_template(
-            'summarizePDF.html',
-            title='Summarize PDF',
-            form=form,
-            test2summarize=test2summarize.split('\n'),
-            openAI_summary=openAI_summary.split('\n'),
-            token_count=token_count,
-            avg_tokens_per_sentence=avg_tokens_per_sentence,
-            openAI_json=openAI_summary_str,
-            is_trimmed=global_is_trimmed,
-            form_prompt_nerds=global_form_prompt,
-            number_of_chunks=global_number_of_chunks
-          )
-      else:
-        content_written = False
-        return render_template('summarizePDF.html', title='Summarize PDF', form=form)
+            content_written = False
+            return render_template('summarizePDF.html',title='Summarize PDF', form=form)
     else:
       content_written = False
       return render_template(
@@ -361,6 +442,7 @@ def summarizePDF():
         title='Summarize PDF',
         form=form
       )
+
 
 
 # Routes for the login and logout pages
