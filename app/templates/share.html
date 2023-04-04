@@ -1,0 +1,15 @@
+{% extends "base-share.html" %}
+
+{% block content %}
+
+<hr>
+<p style="line-height: 2em;" class="left-align">
+<b>Public Link: <a href="{{ url_for('share', hash=hash) }}" target="_blank" style="text-decoration: none;">{{ url_for('share', hash=hash) }}</a> </b>
+</p>
+<hr>
+<p style="line-height: 2em;" class="left-align">
+    {% for para_summary in openAI_summary %}
+        {{para_summary}}<br>
+    {% endfor %}
+</p>
+{% endblock %}

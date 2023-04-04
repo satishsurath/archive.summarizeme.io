@@ -176,7 +176,8 @@ def summarizeText():
                 openAI_json=openAI_summary_str,
                 is_trimmed=session['is_trimmed'],
                 form_prompt_nerds=session['form_prompt'],
-                number_of_chunks=session['number_of_chunks']
+                number_of_chunks=session['number_of_chunks'],
+                test2summarize_hash=test2summarize_hash
             )
         else:
             session['content_written'] = False
@@ -309,7 +310,9 @@ def summarizeURL():
             openAI_json=openAI_summary_str,
             is_trimmed=session['is_trimmed'],
             form_prompt_nerds=session['form_prompt'],
-            number_of_chunks=session['number_of_chunks']
+            number_of_chunks=session['number_of_chunks'],
+            test2summarize_hash=test2summarize_hash
+            
           )
         else:
           # the summary was retrieved from the database, so we don't need to write it to DB again
@@ -331,7 +334,8 @@ def summarizeURL():
             openAI_json=openAI_summary_str,
             is_trimmed=session['is_trimmed'],
             form_prompt_nerds=session['form_prompt'],
-            number_of_chunks=session['number_of_chunks']
+            number_of_chunks=session['number_of_chunks'],
+            test2summarize_hash=test2summarize_hash
           )
       else:
         session['content_written'] = False
@@ -412,7 +416,8 @@ def summarizePDF():
                     openAI_json=openAI_summary_str,
                     is_trimmed=session['is_trimmed'],
                     form_prompt_nerds=session['form_prompt'],
-                    number_of_chunks=session['form_prompt']
+                    number_of_chunks=session['form_prompt'],
+                    test2summarize_hash=test2summarize_hash
                   )
             else:
               #the summary was retrieved from the database, so we don't need to write it to DB again
@@ -434,7 +439,8 @@ def summarizePDF():
                 openAI_json=openAI_summary_str,
                 is_trimmed=session['is_trimmed'],
                 form_prompt_nerds=session['form_prompt'],
-                number_of_chunks=session['form_prompt']
+                number_of_chunks=session['form_prompt'],
+                test2summarize_hash=test2summarize_hash
               )
         else:
             content_written = False
@@ -446,7 +452,23 @@ def summarizePDF():
         title='Summarize PDF',
         form=form
       )
+    
 
+#given the hash of the text in the URL, we can retrieve the summary from the database
+@app.route('/share/<hash>', methods=['GET', 'POST'])
+def share(hash):
+  #check if the hash exists in the Local Database, before calling the OpenAI API
+  if check_if_hash_exists(hash):
+    openAI_summary = get_summary_from_hash(hash)
+    return render_template(
+      'share.html',
+      openAI_summary=openAI_summary.split('\n'),
+      hash=hash
+    )
+  else:
+    return render_template('404.html'), 404
+
+   
 
 
 # Routes for the login and logout pages
@@ -499,6 +521,8 @@ def openAI_debug():
       return render_template('openai-debug.html', title='openAI-debug', form=form,openai_key = os.getenv("OPENAI_API_KEY"), test2summarize=test2summarize, openAI_summary=openAI_summary_str, just_summary = openAI_summary["choices"][0]['message']['content'] )
     else:
         return render_template('openai-debug.html', title='openAI-debug', form=form, openai_key = os.getenv("OPENAI_API_KEY"))
+
+
 
 
 # -------------------- OpenAI API Functions --------------------
@@ -633,6 +657,19 @@ def delete_entry_from_db(entry_id):
   except:
     return False
   
+#given the test2summarize_hash, return the entire entry
+def get_entry_from_hash(test2summarize_hash):
+  try:
+    entry = Entry_Post.query.filter_by(test2summarize_hash=test2summarize_hash).first()
+    if entry:
+      return entry
+    else:
+      return False
+  except:
+    return False
+
+
+
 # -------------------- File Operations --------------------
 
 #given the filename and json contents, write to file and save it to os.path.join(app.config['UPLOAD_FOLDER'], filename)

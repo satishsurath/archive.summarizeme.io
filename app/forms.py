@@ -31,3 +31,5 @@ class DeleteEntry(FlaskForm):
     submit = SubmitField('Delete') 
 
 
+
+
