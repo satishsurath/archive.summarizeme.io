@@ -19,7 +19,11 @@
         </p>
         <br>
         <p>{{ form.submit() }}</p>
-        <div id="processing" style="display:none; font-weight:bold;">Processing<span id="dots"></span></div>
+        <br>
+        <div id="processing" style="display:none; font-weight:bold;">
+            Processing<br>
+            <span id="dots"></span>
+        </div>
         {% if openAI_summary %}
             <div class="left-align">
                 <details>
