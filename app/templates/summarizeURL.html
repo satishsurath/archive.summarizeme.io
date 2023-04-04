@@ -6,7 +6,7 @@
         {{ form.hidden_tag() }}
         <p>
             {{ form.summarize.label }}<br>
-            {{ form.summarize(class_='form-control',placeholder='Enter webpage URL...') }}<br>
+            {{ form.summarize(class_='form-control',placeholder='Enter webpage URL...', style='width: 300px;') }}<br>
             {% for error in form.summarize.errors %}
             <span style="color: red;">[{{ error }}]</span>
             {% endfor %}

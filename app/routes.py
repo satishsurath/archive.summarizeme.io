@@ -168,7 +168,7 @@ def summarizeText():
 
             return render_template(
                 'summarizeText.html',
-                title='Summarize From Text',
+                title='Summarize Text',
                 form=form,
                 test2summarize=test2summarize.split('\n'),
                 openAI_summary=session['openAI_summary'].split('\n'),
@@ -180,10 +180,10 @@ def summarizeText():
             )
         else:
             session['content_written'] = False
-            return render_template('summarizeText.html', title='Summarize From Text', form=form)
+            return render_template('summarizeText.html', title='Summarize Text', form=form)
     else:
         session['content_written'] = False
-        return render_template('summarizeText.html', title='Summarize From Text', form=form)
+        return render_template('summarizeText.html', title='Summarize Text', form=form)
 
 # @app.route('/summarizeText', methods=['GET', 'POST'])
 # def summarizeText():
@@ -300,7 +300,7 @@ def summarizeURL():
           openAI_summary_str = json.dumps(session['openAI_summary_URL_JSON'], indent=4)
           return render_template(
             'summarizeURL.html',
-            title='Summarize From URL',
+            title='Summarize Webpage',
             form=form,
             test2summarize=session['test2summarize_URL'].split('\n'),
             openAI_summary=session['openAI_summary_URL'].split('\n'),
@@ -322,7 +322,7 @@ def summarizeURL():
             openAI_summary_str = json.dumps(session['openAI_summary_JSON_URL'], indent=4)   
           return render_template(
             'summarizeURL.html',
-            title='Summarize From URL',
+            title='Summarize Webpage',
             form=form,
             test2summarize=test2summarize.split('\n'),
             openAI_summary=session['openAI_summary_URL'].split('\n'),
@@ -335,12 +335,12 @@ def summarizeURL():
           )
       else:
         session['content_written'] = False
-        return render_template('summarizeURL.html', title='Summarize From URL', form=form)
+        return render_template('summarizeURL.html', title='Summarize Webpage', form=form)
     else:
       session['content_written'] = False
       return render_template(
         'summarizeURL.html',
-        title='Summarize From URL',
+        title='Summarize Webpage',
         form=form
       )
 

@@ -17,6 +17,7 @@
             <span style="color: red;">[{{ error }}]</span>
             {% endfor %}                
         </p>
+        <br>
         <p>{{ form.submit() }}</p>
         <div id="processing" style="display:none; font-weight:bold;">Processing<span id="dots"></span></div>
         {% if openAI_summary %}
