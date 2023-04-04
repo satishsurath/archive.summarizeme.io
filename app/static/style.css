@@ -9,6 +9,8 @@ body {
   --text-color: #10141d;
   --bkg-color: #f2f3f7;
   --form-bkg-color: #eee;
+  --hr-color: #10141d;
+
   transition: background-color 0.0s, color 0.0s, border-color 0.0s;
 }
 
@@ -18,6 +20,7 @@ body.dark-mode {
   --text-color: #edf1fb;
   --bkg-color: #10141d;
   --form-bkg-color: #444;
+  --hr-color: #edf1fb;
   transition: background-color 0.0s, color 0.0s, border-color 0.0s;
 
 }
@@ -164,4 +167,10 @@ input[type="submit"]:hover {
   margin-right: 0.5rem;
   }
 
-  
+  hr {
+    color:  var(--hr-color);
+    opacity: 30%;
+    fill: var(--hr-color);
+    border: 0;
+    border-top: 1px solid;
+  }
