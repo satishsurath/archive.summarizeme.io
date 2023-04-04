@@ -1,8 +1,8 @@
-# Summarize4Me
+# SummarizeMe.io
 
-AI-powered text summarization made simple. Condense articles, web pages, and PDFs effortlessly. Save time and boost productivity with Summarize4Me.
+AI-powered text summarization made simple. Condense articles, web pages, and PDFs effortlessly. Save time and boost productivity with SummarizeMe.io
 
-[**🔗 Try the live demo here!**](https://ai.sati.sh/index)
+[**🔗 Try the live demo here! ➡️ https://SummarizeMe.io**](https://SummarizeMe.io)
 
 ## 🚧 Work in Progress 🚧
 
@@ -28,7 +28,7 @@ AI-powered text summarization made simple. Condense articles, web pages, and PDF
    
 2. Clone this repository:
    ```shell
-   git clone git@github.com:satishsurath/summarize4me.git
+   git clone git@github.com:satishsurath/SummarizeMe.io.git
     ```
 
 3. Set up your OpenAI API Key as an environment variable. [Request an API key here.](https://openai.com/blog/openai-api)
