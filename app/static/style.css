@@ -22,13 +22,13 @@ body.dark-mode {
 
 }
 
-.nav-links a {
-  color: #1c3365;
-  text-decoration: none;
-}
-
 a {
   color: var(--text-color);
+}
+
+.nav-links a {
+  color: inherit;
+  text-decoration: none;
 }
 
 .nav-links a:hover {
@@ -36,8 +36,25 @@ a {
 }
 
 body.dark-mode .nav-links a,
-body.dark-mode .nav-links a:hover a {
+body.dark-mode .nav-links a:hover {
   color: #edf1fb;
+}
+
+
+@media (max-width: 768px) {
+  .navbar li {
+    display: block;
+    text-align: center;
+  }
+  .navbar li a {
+    display: block;
+    margin: 1px 0;
+    padding: 1px 16px;
+    text-decoration: none;
+  }
+  .navbar li a:hover {
+    /* background-color: var(--form-bkg-color); */
+  }
 }
 
 /* Rest of your CSS */
@@ -146,3 +163,5 @@ input[type="submit"]:hover {
   margin-top: 0.5rem;
   margin-right: 0.5rem;
   }
+
+  

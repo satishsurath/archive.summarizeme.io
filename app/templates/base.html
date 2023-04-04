@@ -136,18 +136,20 @@ function applyTheme() {
     <body>
       <div class="container">
         <div class="item">
-          <ul>
-         <li> <a href="{{ url_for('index') }}"><img src="/static/SummarizeMe_transparent_logov4.png" height="45px"></a></li>
-         <li class="nav-links"> <a href="{{ url_for('index') }}">Home</a></li> 
-         <li class="nav-links"> <a href="{{ url_for('summarizeText') }}">Summarize Text</a></li> 
-         <li class="nav-links"> <a href="{{ url_for('summarizeURL') }}">Summarize URL</a></li>
-         <li class="nav-links"> <a href="{{ url_for('summarizePDF') }}">Summarize PDF</a></li>
-         <li class="nav-links"> <a href="{{ url_for('logs') }}">Logs</a></li> 
-            {% if current_user.is_authenticated %}
-              <li class="nav-links"> <a href="{{ url_for('openAI_debug') }}">OpenAI Debug</a></li> 
-              <li class="nav-links"><a href="{{ url_for('logout') }}">Logout</a></li>
-            {% endif %}   
-        </ul>
+<nav class="navbar">
+  <ul>
+    <li> <a href="{{ url_for('index') }}"><img src="/static/SummarizeMe_transparent_logov4.png" height="45px"></a></li>
+    <li class="nav-links"> <a href="{{ url_for('index') }}">Home</a></li> 
+    <li class="nav-links"> <a href="{{ url_for('summarizeText') }}">Summarize Text</a></li> 
+    <li class="nav-links"> <a href="{{ url_for('summarizeURL') }}">Summarize URL</a></li>
+    <li class="nav-links"> <a href="{{ url_for('summarizePDF') }}">Summarize PDF</a></li>
+    <li class="nav-links"> <a href="{{ url_for('logs') }}">Logs</a></li> 
+    {% if current_user.is_authenticated %}
+      <li class="nav-links"> <a href="{{ url_for('openAI_debug') }}">OpenAI Debug</a></li> 
+      <li class="nav-links"><a href="{{ url_for('logout') }}">Logout</a></li>
+    {% endif %}   
+  </ul>
+</nav>
         <div class="toggle-dark-mode-animation">
               <!-- Add the toggle switch element -->
               Dark Mode
