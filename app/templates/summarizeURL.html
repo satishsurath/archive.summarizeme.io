@@ -39,8 +39,8 @@
                 <details>
                     <summary><b>Text to Summarize:</b></summary>
                     <p>
-                        {% for para_test2summarize in test2summarize %}
-                            {{para_test2summarize}}
+                        {% for para_text2summarize in text2summarize %}
+                            {{para_text2summarize}}
                         {% endfor %}
                     </p>  
                 </details>    
@@ -54,7 +54,7 @@
             <hr>
             <ul>
                 <li class="nav-links">
-                    <a href="{{ url_for('share', hash=test2summarize_hash) }}" target="_blank">
+                    <a href="{{ url_for('share', hash=text2summarize_hash) }}" target="_blank">
                         <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
                         width="18" height="18" class="footer-img"  viewBox="0 0 483 483" xml:space="preserve" style="fill: var(--text-color);">
                             <g>

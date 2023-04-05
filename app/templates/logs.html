@@ -14,7 +14,7 @@
         <th>Delete</th>
         <th>Timestamp</th>
         <th>URL or PDF / JSON</th>  
-        <th>test2summarize</th>                            
+        <th>text2summarize</th>                            
         <th>openAIsummary</th>          
       </tr>
     </thead>
@@ -36,22 +36,22 @@
                   {{ entry.url[:15] }}...
                 </a>
                 
-                      {% if entry.test2summarize_hash %}   
+                      {% if entry.text2summarize_hash %}   
                       <br>
                       <hr>
           
-                      <a href="/static/uploads/{{ entry.test2summarize_hash}}.json" target="_blank">
+                      <a href="/static/uploads/{{ entry.text2summarize_hash}}.json" target="_blank">
                       JSON
                       </a>
                       {% endif %}
 
             {% elif entry.posttype  == 0 %} 
                 Summary from Text
-                {% if entry.test2summarize_hash %}   
+                {% if entry.text2summarize_hash %}   
                 <br>
                 <hr>
             
-                <a href="/static/uploads/{{ entry.test2summarize_hash}}.json" target="_blank">
+                <a href="/static/uploads/{{ entry.text2summarize_hash}}.json" target="_blank">
                 JSON
                 </a>
                 {% endif %}                
@@ -60,11 +60,11 @@
             <a href="/static/uploads/{{ entry.url}}" target="_blank">
               {{ entry.url[:15] }}...
             </a>
-                {% if entry.test2summarize_hash %}   
+                {% if entry.text2summarize_hash %}   
                 <br>
                 <hr>
                  
-                <a href="/static/uploads/{{ entry.test2summarize_hash}}.json" target="_blank">
+                <a href="/static/uploads/{{ entry.text2summarize_hash}}.json" target="_blank">
                 JSON
                 </a>
                 {% endif %}
@@ -72,12 +72,12 @@
           </td>
           <td style="text-align: left;">
               <p style="text-align: left;" data-id='{{entry.id}}' class="card">
-                {{ entry.test2summarize[:100] }}
+                {{ entry.text2summarize[:100] }}
                 <span class="dots">
                   ...
                 </span>
                 <span class="more">
-                  {{ entry.test2summarize[101:] }}
+                  {{ entry.text2summarize[101:] }}
                 </span>
                 <button onclick='myFunction({{ entry.id }})' class="myBtn">Read more</button>
               </p>
