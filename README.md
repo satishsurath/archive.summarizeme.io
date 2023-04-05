@@ -8,8 +8,9 @@ AI-powered text summarization made simple. Condense articles, web pages, and PDF
 
 ### ✅ Implemented Features:
 - **Summarize Text, URLs and PDF files:** Easily summarize content from plain text, web pages or PDF files.
+- **Share Summary:** We generate a unique 🌐 webpage for each of your summary so you can share it with others. 
 - **Unlimited Token Support with Chunking:** No more token size limits! The chunking feature allows seamless summarization of any length of text or URL, providing a smooth and efficient experience.
-- **Local SQLite File Storage:** Automatically save all files to a local SQLite file.\
+- **Local SQLite File Storage:** Automatically save all files to a local SQLite file.
 - **User Session Support:** for additional Security
 - **Hash-Based Database Storage for Fast Retrieval:** Optimize the retrieval process by storing the text's hash in our database, allowing for quicker access to existing summaries and saving time.
 - **Stats for Nerds:** Display additional statistics and raw JSON output.
