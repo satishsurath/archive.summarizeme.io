@@ -392,11 +392,11 @@ def summarizePDF():
               )
         else:
             print("summarizePDF - 13")
-            content_written = False
+            session['content_written'] = False
             return render_template('summarizePDF.html',title='Summarize PDF', form=form)
     else:
-      print("summarizePDF - 14")
-      content_written = False
+      
+      session['content_written'] = False
       return render_template(
         'summarizePDF.html',
         title='Summarize PDF',
