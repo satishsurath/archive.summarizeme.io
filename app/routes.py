@@ -293,17 +293,20 @@ def summarizePDF():
     print("summarizePDF - 1")
     form = UploadPDFForm()
     if not session.get('content_written', False):
+        print("summarizePDF - 2")
         if form.validate_on_submit():
+            print("summarizePDF - 3")
             # Get the uploaded PDF file
             pdf_file = form.pdf.data
-
+            print("summarizePDF - 4")
             # Read the PDF contents
             test2summarize = extract_text(BytesIO(pdf_file.read()))
             test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
-
+            print("summarizePDF - 5")
             # Save the PDF file to the uploads folder
             filename = secure_filename(test2summarize_hash + pdf_file.filename)
             session['pdf_filename'] = filename
+            print("summarizePDF - 5")
             pdf_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
             # Seek to the beginning of the file before saving, then save the file
@@ -311,35 +314,37 @@ def summarizePDF():
             # Check if folder exists:
             if check_folder_exists(app.config['UPLOAD_FOLDER']):
                 pdf_file.save(pdf_path)
-
+                print("summarizePDF - 6")
             # Check if the hash exists in the Local Database, before calling the OpenAI API
             if check_if_hash_exists(test2summarize_hash):
+                print("summarizePDF - 7")
                 openAI_summary = get_summary_from_hash(test2summarize_hash)
                 openAI_summary_JSON = read_from_file(test2summarize_hash + ".json")
                 session['is_trimmed'] = False
                 session['form_prompt'] = test2summarize
                 session['number_of_chunks'] = "Retrieved from Database"
             else:
+                print("summarizePDF - 8")
                 openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(test2summarize)
                 openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
                 write_json_to_file(test2summarize_hash + ".json", openAI_summary_JSON)
                 if check_folder_exists(app.config['UPLOAD_CONTENT']):
                   write_content_to_file(test2summarize_hash + ".txt", openAI_summary)
-                
-
+            print("summarizePDF - 9")
             session['openAI_summary_PDF'] = openAI_summary
             session['openAI_summary_JSON_PDF'] = openAI_summary_JSON
             session['test2summarize_PDF'] = test2summarize
-
             return redirect(url_for('summarizePDF'))
 
         # Now that we have the summary, we can render the page
         if session.get('openAI_summary_PDF'):
+            print("summarizePDF - 10")
             test2summarize = session.get('test2summarize_PDF')
             test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
 
             # If we calculated the summary with OpenAI API, we need to write it to the database
             if not check_if_hash_exists(test2summarize_hash):
+                print("summarizePDF - 11")
                 write_to_db(2, session['pdf_filename'], test2summarize, session['openAI_summary_PDF'])
 
                 # Calculate token count and average tokens per sentence
@@ -362,6 +367,7 @@ def summarizePDF():
                     test2summarize_hash=test2summarize_hash
                   )
             else:
+              print("summarizePDF - 12")
               #the summary was retrieved from the database, so we don't need to write it to DB again
               # Calculate token count and average tokens per sentence
               token_count = num_tokens_from_string(test2summarize)
@@ -385,9 +391,11 @@ def summarizePDF():
                 test2summarize_hash=test2summarize_hash
               )
         else:
+            print("summarizePDF - 13")
             content_written = False
             return render_template('summarizePDF.html',title='Summarize PDF', form=form)
     else:
+      print("summarizePDF - 14")
       content_written = False
       return render_template(
         'summarizePDF.html',
