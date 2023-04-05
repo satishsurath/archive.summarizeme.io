@@ -139,7 +139,6 @@ def summarizeText():
             else:
                 openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(test2summarize)
                 openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
-
             session['openAI_summary'] = openAI_summary
             session['openAI_summary_JSON'] = openAI_summary_JSON
             session['test2summarize'] = test2summarize
@@ -640,13 +639,14 @@ def get_summary_from_hash(test2summarize_hash):
 def write_to_db(posttype, url, test2summarizedb, openAIsummarydb):
   global content_written
   try:
-      if not content_written:
+      if not session.get('content_written', False):
           test2summarize_hash = hashlib.sha256(test2summarizedb.encode('utf-8')).hexdigest()
           entry = Entry_Post(posttype=posttype, url=url, test2summarize=test2summarizedb, openAIsummary=openAIsummarydb, test2summarize_hash=test2summarize_hash)
           db.session.add(entry)
           db.session.commit()
           db.session.close()
           content_written = True
+          session['content_written'] = False
           return True
   except:
       print("Error occurred. Could not write to database.")
