@@ -155,7 +155,9 @@ def summarizeText():
                 token_count = num_tokens_from_string(test2summarize)
                 avg_tokens_per_sentence = avg_sentence_length(test2summarize)
                 openAI_summary_str = json.dumps(session['openAI_summary_JSON'], indent=4)
-                write_to_file(test2summarize_hash + ".json", session['openAI_summary_JSON'])
+                write_json_to_file(test2summarize_hash + ".json", session['openAI_summary_JSON'])
+                if check_folder_exists(app.config['UPLOAD_CONTENT']):
+                  write_content_to_file(test2summarize_hash + ".txt", test2summarize)
             else:
                 token_count = num_tokens_from_string(test2summarize)
                 avg_tokens_per_sentence = avg_sentence_length(test2summarize)
@@ -183,78 +185,6 @@ def summarizeText():
     else:
         session['content_written'] = False
         return render_template('summarizeText.html', title='Summarize Text', form=form)
-
-# @app.route('/summarizeText', methods=['GET', 'POST'])
-# def summarizeText():
-#     form = SummarizeFromText()
-#     global openAI_summary, openAI_summary_JSON, test2summarize, url, global_is_trimmed, global_form_prompt, global_number_of_chunks, content_written
-#     url = ""
-#     if not content_written:
-#       if form.validate_on_submit():
-#         test2summarize = form.summarize.data
-#         test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
-#         #check if the hash exists in the Local Database, before calling the OpenAI API
-#         if check_if_hash_exists(test2summarize_hash):
-#           openAI_summary = get_summary_from_hash(test2summarize_hash)
-#           openAI_summary_JSON = read_from_file(test2summarize_hash+".json")
-#           global_is_trimmed = False
-#           global_form_prompt = test2summarize
-#           global_number_of_chunks = "Retrived from Database"
-#         else:
-#           openAI_summary_JSON, global_is_trimmed, global_form_prompt, global_number_of_chunks = openAI_summarize_chunk(test2summarize)
-#           openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
-#         return redirect(url_for('summarizeText'))
-      
-#       #Now that we have the summary, we can render the page
-#       if (openAI_summary):
-#         test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
-#          # If we calculated the summary with OpenAI API, we need to write it to the database
-#         if not check_if_hash_exists(test2summarize_hash):
-#           write_to_db(0,"0",test2summarize,openAI_summary)          
-#           # Calculate token count and average tokens per sentence
-#           token_count = num_tokens_from_string(test2summarize)
-#           avg_tokens_per_sentence = avg_sentence_length(test2summarize) 
-#           openAI_summary_str = json.dumps(openAI_summary_JSON, indent=4)
-#           write_to_file(test2summarize_hash+".json",openAI_summary_JSON)               
-#           return render_template(
-#             'summarizeText.html', 
-#             title='Summarize From Text', 
-#             form=form,
-#             test2summarize=test2summarize.split('\n'), 
-#             openAI_summary=openAI_summary.split('\n'),  
-#             token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence, 
-#             openAI_json=openAI_summary_str, 
-#             is_trimmed=global_is_trimmed, 
-#             form_prompt_nerds=global_form_prompt,
-#             number_of_chunks=global_number_of_chunks
-#           )
-#         else:
-#           # the summary was retrieved from the database, so we don't need to write it to DB again
-#           # Calculate token count and average tokens per sentence
-#           token_count = num_tokens_from_string(test2summarize)
-#           avg_tokens_per_sentence = avg_sentence_length(test2summarize) 
-#           if not openAI_summary_JSON:
-#             openAI_summary_str = "Retrived from Database"
-#           else:
-#             openAI_summary_str = json.dumps(openAI_summary_JSON, indent=4)    
-#           return render_template(
-#             'summarizeText.html', 
-#             title='Summarize From Text', 
-#             form=form,
-#             test2summarize=test2summarize.split('\n'), 
-#             openAI_summary=openAI_summary.split('\n'),  
-#             token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence, 
-#             openAI_json=openAI_summary_str, 
-#             is_trimmed=global_is_trimmed, 
-#             form_prompt_nerds=global_form_prompt,
-#             number_of_chunks=global_number_of_chunks
-#           )
-#       else:
-#         content_written = False
-#         return render_template('summarizeText.html', title='Summarize From Text', form=form)
-#     else:
-#         content_written = False
-#         return render_template('summarizeText.html', title='Summarize From Text', form=form)
 
 @app.route('/summarizeURL', methods=['GET', 'POST'])
 def summarizeURL():
@@ -287,7 +217,9 @@ def summarizeURL():
         else:
           openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(test2summarize)
           openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
-          write_to_file(test2summarize_hash+".json",openAI_summary_JSON)  
+          write_json_to_file(test2summarize_hash+".json",openAI_summary_JSON)
+          if check_folder_exists(app.config['UPLOAD_CONTENT']):
+            write_content_to_file(test2summarize_hash + ".txt", test2summarize)
         session['openAI_summary_URL'] = openAI_summary
         session['openAI_summary_URL_JSON'] = openAI_summary_JSON
         session['test2summarize_URL'] = test2summarize
@@ -377,7 +309,7 @@ def summarizePDF():
             # Seek to the beginning of the file before saving, then save the file
             pdf_file.seek(0)
             # Check if folder exists:
-            if check_folder_exists():
+            if check_folder_exists(app.config['UPLOAD_FOLDER']):
                 pdf_file.save(pdf_path)
 
             # Check if the hash exists in the Local Database, before calling the OpenAI API
@@ -390,7 +322,10 @@ def summarizePDF():
             else:
                 openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(test2summarize)
                 openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
-                write_to_file(test2summarize_hash + ".json", openAI_summary_JSON)
+                write_json_to_file(test2summarize_hash + ".json", openAI_summary_JSON)
+                if check_folder_exists(app.config['UPLOAD_CONTENT']):
+                  write_content_to_file(test2summarize_hash + ".txt", openAI_summary)
+                
 
             session['openAI_summary_PDF'] = openAI_summary
             session['openAI_summary_JSON_PDF'] = openAI_summary_JSON
@@ -682,7 +617,7 @@ def get_entry_from_hash(test2summarize_hash):
 # -------------------- File Operations --------------------
 
 #given the filename and json contents, write to file and save it to os.path.join(app.config['UPLOAD_FOLDER'], filename)
-def write_to_file(filename, json_contents):
+def write_json_to_file(filename, json_contents):
   if (app.config['WRITE_JSON_LOCALLY'] == 'False'):
     return True
   else:
@@ -693,6 +628,19 @@ def write_to_file(filename, json_contents):
       return True
     except:
       return False
+    
+#given the filename and test2summarize contents, write to file and save it to os.path.join(app.config['UPLOAD_CONTENT'], filename)
+def write_content_to_file(filename, content):
+  if (app.config['WRITE_TEXT_LOCALLY'] == 'False'):
+    return True
+  else:
+    try:
+      with open(os.path.join(app.config['UPLOAD_CONTENT'], filename), 'w') as f:
+        f.write(content)
+      return True
+    except:
+      return False
+
 
 #Given the filename, read the file and return the contents, wrap it in try catch
 def read_from_file(filename):
@@ -707,10 +655,10 @@ def read_from_file(filename):
       return False
     
 #check if folder os.path.join(app.config['UPLOAD_FOLDER'] exists, if not create it
-def check_folder_exists():
+def check_folder_exists(folder_path):
   try:
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-      os.makedirs(app.config['UPLOAD_FOLDER'])
+    if not os.path.exists(folder_path):
+      os.makedirs(folder_path)
     return True
   except:
     return False

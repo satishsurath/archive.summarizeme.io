@@ -7,7 +7,9 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.sqlite3')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = 'app/static/uploads'
+    UPLOAD_CONTENT = 'app/text2summary/uploads'
     WRITE_JSON_LOCALLY = True
+    WRITE_TEXT_LOCALLY = True
     # Configure session options
     SESSION_TYPE = 'filesystem'
     SESSION_FILE_DIR = './sessions'
