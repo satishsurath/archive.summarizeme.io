@@ -266,9 +266,18 @@ def summarizeURL():
         newconfig = use_config()
         newconfig.set("DEFAULT", "EXTRACTION_TIMEOUT", "0")
         downloaded = trafilatura.fetch_url(form.summarize.data)
+        if downloaded is None:
+          flash("Unable to download content from the provided URL. Please try another URL.")
+          return redirect(url_for('summarizeURL'))
         session['url'] = form.summarize.data
         test2summarize = extract(downloaded, config=newconfig)
-        test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
+        if test2summarize is not None:
+          test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
+          # ... rest of the code
+          test2summarize_hash = hashlib.sha256(test2summarize.encode('utf-8')).hexdigest()
+        else:
+            flash("Unable to extract content from the provided URL. Please try another URL.")
+            return redirect(url_for('summarizeURL'))
         #check if the hash exists in the Local Database, before calling the OpenAI API
         if check_if_hash_exists(test2summarize_hash):
           openAI_summary = get_summary_from_hash(test2summarize_hash)
