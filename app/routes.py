@@ -143,13 +143,14 @@ def summarizeText():
             session['openAI_summary_JSON'] = openAI_summary_JSON
             session['text2summarize'] = text2summarize
             session['url'] = ""
-
             return redirect(url_for('summarizeText'))
-
         if session.get('openAI_summary'):
             text2summarize = session.get('text2summarize')
-            text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
-
+            if text2summarize is not None:
+              text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
+            else:
+              flash("Unable to extract content from the provided URL. Please try another URL.")
+              return redirect(url_for('summarizeURL'))               
             if not check_if_hash_exists(text2summarize_hash):
                 write_to_db(0, "0", text2summarize, session['openAI_summary'])
                 token_count = num_tokens_from_string(text2summarize)
@@ -226,7 +227,11 @@ def summarizeURL():
       #Now that we have the summary, we can render the page
       if session.get('openAI_summary_URL'):
         text2summarize = session.get('text2summarize_URL')
-        text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()        
+        if text2summarize is not None:
+          text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
+        else:
+          flash("Unable to extract content from the provided URL. Please try another URL.")
+          return redirect(url_for('summarizeURL'))                    
         #text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
         # If we calculated the summary with OpenAI API, we need to write it to the database
         if not check_if_hash_exists(text2summarize_hash):
@@ -276,9 +281,11 @@ def summarizeURL():
           )
       else:
         session['content_written'] = False
+        clear_session()
         return render_template('summarizeURL.html', title='Summarize Webpage', form=form)
     else:
       session['content_written'] = False
+      clear_session()
       return render_template(
         'summarizeURL.html',
         title='Summarize Webpage',
@@ -393,11 +400,13 @@ def summarizePDF():
               )
         else:
             print("summarizePDF - 13")
+            clear_session()
             session['content_written'] = False
             return render_template('summarizePDF.html',title='Summarize PDF', form=form)
     else:
       
       session['content_written'] = False
+      clear_session()
       return render_template(
         'summarizePDF.html',
         title='Summarize PDF',
@@ -458,6 +467,7 @@ def delete_entry(entry_id):
 @app.route('/openAI-debug', methods=['GET', 'POST'])
 @login_required
 def openAI_debug():
+    clear_session()
     form = openAI_debug_form()
     global openAI_summary
     global text2summarize
@@ -671,3 +681,23 @@ def check_folder_exists(folder_path):
   except:
     return False
 
+
+# -------------------- Helper functions  --------------------
+
+#function to clear the session
+def clear_session():
+  session.pop('content_written', None)
+  session.pop('url', None)
+  session.pop('text2summarize', None)
+  session.pop('openAIsummary', None)
+  session.pop('text2summarize_hash', None)
+  session.pop('form_prompt', None)
+  session.pop('global_prompt', None)
+  session.pop('is_trimmed', None)
+  session.pop('global_number_of_chunks', None)
+  session.pop('openai_response', None)
+  session.pop('openai_responses', None)
+  session.pop('completed_messages', None)
+  session.pop('total_usage', None)
+  session.pop('form_prompt_chunks', None)
+  session.pop('form_prompt_chunk', None)

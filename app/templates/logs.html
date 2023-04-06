@@ -73,12 +73,12 @@
           <td style="text-align: left;">
               <p style="text-align: left;" data-id='{{entry.id}}' class="card">
                 {% if entry.text2summarize %}
-                {{ entry.text2summarize[:100] }}
+                {{ entry.text2summarize[:20] }}
                 <span class="dots">
                   ...
                 </span>
                 <span class="more">
-                  {{ entry.text2summarize[101:] }}
+                  {{ entry.text2summarize[21:] }}
                 </span>
               {% else %}
                 <i>No content available</i>
