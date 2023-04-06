@@ -35,6 +35,7 @@
           display: flex;
           justify-content: center;
           align-items: center;
+          margin: 0px;
         }
 
         .switch {
@@ -153,7 +154,7 @@ function applyTheme() {
                   <li class="nav-links"> <a href="{{ url_for('openAI_debug') }}">OpenAI Debug</a></li> 
                   <li class="nav-links"><a href="{{ url_for('logout') }}">Logout</a></li>
                 {% endif %}   
-                <li>
+                <li class="nav-links">
               <div class="toggle-container">
                 <div class="toggle-dark-mode-animation">
                       <!-- Add the toggle switch element -->
