@@ -125,67 +125,132 @@ def privacypolicy():
 @app.route('/summarizeText', methods=['GET', 'POST'])
 def summarizeText():
     form = SummarizeFromText()
-    if not session.get('content_written', False):
-        if form.validate_on_submit():
-            text2summarize = form.summarize.data
-            text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
 
-            if check_if_hash_exists(text2summarize_hash):
-                openAI_summary = get_summary_from_hash(text2summarize_hash)
-                openAI_summary_JSON = read_from_file(text2summarize_hash + ".json")
-                session['is_trimmed'] = False
-                session['form_prompt'] = text2summarize
-                session['number_of_chunks'] = "Retrieved from Database"
-            else:
-                openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(text2summarize)
-                openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
-            session['openAI_summary'] = openAI_summary
-            session['openAI_summary_JSON'] = openAI_summary_JSON
-            session['text2summarize'] = text2summarize
-            session['url'] = ""
-            return redirect(url_for('summarizeText'))
-        if session.get('openAI_summary'):
-            text2summarize = session.get('text2summarize')
-            if text2summarize is not None:
-              text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
-            else:
-              flash("Unable to extract content from the provided URL. Please try another URL.")
-              return redirect(url_for('summarizeURL'))               
-            if not check_if_hash_exists(text2summarize_hash):
-                write_to_db(0, "0", text2summarize, session['openAI_summary'])
-                token_count = num_tokens_from_string(text2summarize)
-                avg_tokens_per_sentence = avg_sentence_length(text2summarize)
-                openAI_summary_str = json.dumps(session['openAI_summary_JSON'], indent=4)
-                write_json_to_file(text2summarize_hash + ".json", session['openAI_summary_JSON'])
-                if check_folder_exists(app.config['UPLOAD_CONTENT']):
-                  write_content_to_file(text2summarize_hash + ".txt", text2summarize)
-            else:
-                token_count = num_tokens_from_string(text2summarize)
-                avg_tokens_per_sentence = avg_sentence_length(text2summarize)
-                if not session['openAI_summary_JSON']:
-                    openAI_summary_str = "Retrieved from Database"
-                else:
-                    openAI_summary_str = json.dumps(session['openAI_summary_JSON'], indent=4)
+    if form.validate_on_submit():
+        text2summarize = form.summarize.data
+        text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
 
-            return render_template(
-                'summarizeText.html',
-                title='Summarize Text',
-                form=form,
-                text2summarize=text2summarize.split('\n'),
-                openAI_summary=session['openAI_summary'].split('\n'),
-                token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence,
-                openAI_json=openAI_summary_str,
-                is_trimmed=session['is_trimmed'],
-                form_prompt_nerds=session['form_prompt'],
-                number_of_chunks=session['number_of_chunks'],
-                text2summarize_hash=text2summarize_hash
-            )
+        if check_if_hash_exists(text2summarize_hash):
+            openAI_summary = get_summary_from_hash(text2summarize_hash)
+            openAI_summary_JSON = read_from_file(text2summarize_hash + ".json")
+            session['is_trimmed'] = False
+            session['form_prompt'] = text2summarize
+            session['number_of_chunks'] = "Retrieved from Database"
         else:
-            session['content_written'] = False
-            return render_template('summarizeText.html', title='Summarize Text', form=form)
+            openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(text2summarize)
+            openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
+
+        session['openAI_summary'] = openAI_summary
+        session['openAI_summary_JSON'] = openAI_summary_JSON
+        session['text2summarize'] = text2summarize
+        session['url'] = ""
+        session['content_written'] = False
+        return redirect(url_for('summarizeText'))
+
+    if session.get('openAI_summary'):
+        text2summarize = session.get('text2summarize')
+        if text2summarize is not None:
+            text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
+        else:
+            flash("Unable to extract content from the provided URL. Please try another URL.")
+            return redirect(url_for('summarizeURL'))
+
+        if not check_if_hash_exists(text2summarize_hash) and not session.get('content_written', False):
+            write_to_db(0, "0", text2summarize, session['openAI_summary'])
+            write_json_to_file(text2summarize_hash + ".json", session['openAI_summary_JSON'])
+            if check_folder_exists(app.config['UPLOAD_CONTENT']):
+                write_content_to_file(text2summarize_hash + ".txt", text2summarize)
+            session['content_written'] = True
+
+        token_count = num_tokens_from_string(text2summarize)
+        avg_tokens_per_sentence = avg_sentence_length(text2summarize)
+
+        if session['openAI_summary_JSON']:
+            openAI_summary_str = json.dumps(session['openAI_summary_JSON'], indent=4)
+        else:
+            openAI_summary_str = "Retrieved from Database"
+
+        return render_template(
+            'summarizeText.html',
+            title='Summarize Text',
+            form=form,
+            text2summarize=text2summarize.split('\n'),
+            openAI_summary=session['openAI_summary'].split('\n'),
+            token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence,
+            openAI_json=openAI_summary_str,
+            is_trimmed=session['is_trimmed'],
+            form_prompt_nerds=session['form_prompt'],
+            number_of_chunks=session['number_of_chunks'],
+            text2summarize_hash=text2summarize_hash
+        )
     else:
         session['content_written'] = False
         return render_template('summarizeText.html', title='Summarize Text', form=form)
+
+# @app.route('/summarizeText', methods=['GET', 'POST'])
+# def summarizeText():
+#     form = SummarizeFromText()
+#     if not session.get('content_written', False):
+#         if form.validate_on_submit():
+#             text2summarize = form.summarize.data
+#             text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
+
+#             if check_if_hash_exists(text2summarize_hash):
+#                 openAI_summary = get_summary_from_hash(text2summarize_hash)
+#                 openAI_summary_JSON = read_from_file(text2summarize_hash + ".json")
+#                 session['is_trimmed'] = False
+#                 session['form_prompt'] = text2summarize
+#                 session['number_of_chunks'] = "Retrieved from Database"
+#             else:
+#                 openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(text2summarize)
+#                 openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
+#             session['openAI_summary'] = openAI_summary
+#             session['openAI_summary_JSON'] = openAI_summary_JSON
+#             session['text2summarize'] = text2summarize
+#             session['url'] = ""
+#             return redirect(url_for('summarizeText'))
+#         if session.get('openAI_summary'):
+#             text2summarize = session.get('text2summarize')
+#             if text2summarize is not None:
+#               text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
+#             else:
+#               flash("Unable to extract content from the provided URL. Please try another URL.")
+#               return redirect(url_for('summarizeURL'))               
+#             if not check_if_hash_exists(text2summarize_hash):
+#                 write_to_db(0, "0", text2summarize, session['openAI_summary'])
+#                 token_count = num_tokens_from_string(text2summarize)
+#                 avg_tokens_per_sentence = avg_sentence_length(text2summarize)
+#                 openAI_summary_str = json.dumps(session['openAI_summary_JSON'], indent=4)
+#                 write_json_to_file(text2summarize_hash + ".json", session['openAI_summary_JSON'])
+#                 if check_folder_exists(app.config['UPLOAD_CONTENT']):
+#                   write_content_to_file(text2summarize_hash + ".txt", text2summarize)
+#             else:
+#                 token_count = num_tokens_from_string(text2summarize)
+#                 avg_tokens_per_sentence = avg_sentence_length(text2summarize)
+#                 if not session['openAI_summary_JSON']:
+#                     openAI_summary_str = "Retrieved from Database"
+#                 else:
+#                     openAI_summary_str = json.dumps(session['openAI_summary_JSON'], indent=4)
+
+#             return render_template(
+#                 'summarizeText.html',
+#                 title='Summarize Text',
+#                 form=form,
+#                 text2summarize=text2summarize.split('\n'),
+#                 openAI_summary=session['openAI_summary'].split('\n'),
+#                 token_count=token_count, avg_tokens_per_sentence=avg_tokens_per_sentence,
+#                 openAI_json=openAI_summary_str,
+#                 is_trimmed=session['is_trimmed'],
+#                 form_prompt_nerds=session['form_prompt'],
+#                 number_of_chunks=session['number_of_chunks'],
+#                 text2summarize_hash=text2summarize_hash
+#             )
+#         else:
+#             session['content_written'] = False
+#             return render_template('summarizeText.html', title='Summarize Text', form=form)
+#     else:
+#         session['content_written'] = False
+#         return render_template('summarizeText.html', title='Summarize Text', form=form)
 
 @app.route('/summarizeURL', methods=['GET', 'POST'])
 def summarizeURL():
