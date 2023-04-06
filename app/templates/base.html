@@ -31,6 +31,12 @@
 
       <style>
         /* Add this style block to include the toggle switch CSS */
+        .toggle-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
         .switch {
           position: relative;
           display: inline-block;
@@ -139,7 +145,6 @@ function applyTheme() {
             <nav class="navbar">
               <ul>
                 <li> <a href="{{ url_for('index') }}"><img src="/static/SummarizeMe_transparent_logov4.png" height="45px"></a></li>
-                <li class="nav-links"> <a href="{{ url_for('index') }}">Home</a></li> 
                 <li class="nav-links"> <a href="{{ url_for('summarizeText') }}">Summarize Text</a></li> 
                 <li class="nav-links"> <a href="{{ url_for('summarizeURL') }}">Summarize URL</a></li>
                 <li class="nav-links"> <a href="{{ url_for('summarizePDF') }}">Summarize PDF</a></li>
@@ -148,16 +153,21 @@ function applyTheme() {
                   <li class="nav-links"> <a href="{{ url_for('openAI_debug') }}">OpenAI Debug</a></li> 
                   <li class="nav-links"><a href="{{ url_for('logout') }}">Logout</a></li>
                 {% endif %}   
-              </ul>
+                <li>
+              <div class="toggle-container">
+                <div class="toggle-dark-mode-animation">
+                      <!-- Add the toggle switch element -->
+                      Dark Mode
+                      <label class="switch"> 
+                        <input type="checkbox" id="toggle-theme" onclick="setTheme()">
+                        <span class="slider round"></span>
+                      </label>
+                </div>
+              </div>
+            </li>
+            </ul>
             </nav>
-            <div class="toggle-dark-mode-animation">
-                  <!-- Add the toggle switch element -->
-                  Dark Mode
-                  <label class="switch"> 
-                    <input type="checkbox" id="toggle-theme" onclick="setTheme()">
-                    <span class="slider round"></span>
-                  </label>
-            </div>
+
           </div>  
         <div class="item">
           {% block content %}

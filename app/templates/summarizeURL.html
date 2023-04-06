@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+
     <h1>Summarize From URL</h1>
     {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -34,8 +35,12 @@
             Processing<br>
             <span id="dots"></span>
         </div>
+    </form>
+</div>
+<div class="item">
+
         {% if openAI_summary %}
-            <div class="left-align">
+        <div class="left-align">
                 <details>
                     <summary><b>Text to Summarize:</b></summary>
                     <p>
@@ -70,7 +75,8 @@
                     </a>
                 </li>
             </ul>
-            <hr>            <details>
+            <hr>
+            <details>
                 <summary>Stats for Nerds</summary>
                 <p><strong>Token count:</strong> {{ token_count }}</p>
                 <p><strong>Chunks count:</strong> {{ number_of_chunks }}</p>
@@ -93,7 +99,7 @@
             </details>
         </div>
         {% endif %}
-    </form>
+
     <script>
         var interval;
         var dotCount = 0;
@@ -114,4 +120,5 @@
             }, 500);
         }
     </script>
+
 {% endblock %}

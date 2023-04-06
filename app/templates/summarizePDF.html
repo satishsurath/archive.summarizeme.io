@@ -24,6 +24,9 @@
             Processing<br>
             <span id="dots"></span>
         </div>
+    </form>
+</div>
+<div class="item">        
         {% if openAI_summary %}
             <div class="left-align">
                 <details>
@@ -84,7 +87,6 @@
             </details>
         </div>
         {% endif %}
-    </form>
     <script>
         var interval;
         var dotCount = 0;
@@ -105,4 +107,5 @@
             }, 500);
         }
     </script>
+
 {% endblock %}

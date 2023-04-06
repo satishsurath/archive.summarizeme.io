@@ -26,6 +26,12 @@
 
       <style>
         /* Add this style block to include the toggle switch CSS */
+        .toggle-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        
         .switch {
           position: relative;
           display: inline-block;
@@ -131,16 +137,25 @@ function applyTheme() {
     <body>
       <div class="container">
         <div class="item">
-              <h2><a href="{{ url_for('index') }}"><img src="/static/SummarizeMe_transparent_logov4.png" height="35px"></a> Summary:</h2>
-              <br>
-              <div class="toggle-dark-mode-animation">
-                  <!-- Add the toggle switch element -->
-                  Dark Mode
-                  <label class="switch"> 
-                    <input type="checkbox" id="toggle-theme" onclick="setTheme()">
-                    <span class="slider round"></span>
-                  </label>
-              </div>
+
+          <nav class="navbar">
+            <ul>
+              <li> <a href="{{ url_for('index') }}"><img src="/static/SummarizeMe_transparent_logov4.png" height="45px"></a></li>
+              <li>
+                <div class="toggle-container">
+                  <div class="toggle-dark-mode-animation">
+                        <!-- Add the toggle switch element -->
+                        Dark Mode
+                        <label class="switch"> 
+                          <input type="checkbox" id="toggle-theme" onclick="setTheme()">
+                          <span class="slider round"></span>
+                        </label>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </nav>
+
         </div>
         <div class="item">
           {% block content %}

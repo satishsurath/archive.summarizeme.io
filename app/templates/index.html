@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
-        <h1>Productivity Upgrade</h1>
-
-        <h2> 📄➕🤖 ➡🎯 </h2>
+        <h1>SummarizeMe.io</h1>
+        <details>
+        <summary class="homepage-heading">About</summary>                
+        <h2 class="center-align">Productivity Upgrade</h2>
+        <h2 class="center-align"> 📄➕🤖 ➡🎯 </h2>
         <br>
         <p class="center-align">                            
         AI-powered text summarization made simple. <br>
@@ -10,6 +12,7 @@
         Save time and boost productivity with SummarizeMe.io 
         </p>
         <br>
+        </details>
         <hr>
         <h3 class="left-align" style="margin-left:2em;">Summarize:</h3>
         <h3 class="left-align" style="margin-left:4em;"> - <a href="{{ url_for('summarizeText') }}" style="text-decoration: none;"> Text </a></h3>
@@ -17,20 +20,23 @@
         <h3 class="left-align" style="margin-left:4em;"> - <a href="{{ url_for('summarizePDF') }}" style="text-decoration: none;"> PDF </a></h3>
         <hr>
         <br>
-        <h3>v0.1.0 First Major Release</h3>
-        <p class="left-align">
-        <b>Features in this release:</b><br>
-        - Summarize From Text, Webpages and PDF files<br>
-        - Unlimited Token Support with chunking. No more token size limits<br>
-        - Additional stats display and raw JSON output option<br>
-        - Local Database Storage for faster retrieval<br>
-        - Privacy Policy (first version) added<br>
-        - Backend Logs and Debug Page for site admins<br>
-        - Dark Mode Toggle<br>             
-        <br>
-        <b>Features In the Pipeline:</b><br>
-        - SPAM Protection<br>
-        - Integration of Additional LLMs (by Google for example)<br>
-        </p>
+        <details>
+                <summary class="homepage-heading">Release Notes</summary>
+                <h3>v0.1.0 First Major Release</h3>
+                <p class="left-align">
+                <b>Features in this release:</b><br>
+                - Summarize From Text, Webpages and PDF files<br>
+                - Unlimited Token Support with chunking. No more token size limits<br>
+                - Additional stats display and raw JSON output option<br>
+                - Local Database Storage for faster retrieval<br>
+                - Privacy Policy (first version) added<br>
+                - Backend Logs and Debug Page for site admins<br>
+                - Dark Mode Toggle<br>             
+                <br>
+                <b>Features In the Pipeline:</b><br>
+                - SPAM Protection<br>
+                - Integration of Additional LLMs (by Google for example)<br>
+                </p>
+        </details>
 
 {% endblock %}
