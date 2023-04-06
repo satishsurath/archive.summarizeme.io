@@ -72,6 +72,7 @@
           </td>
           <td style="text-align: left;">
               <p style="text-align: left;" data-id='{{entry.id}}' class="card">
+                {% if entry.text2summarize %}
                 {{ entry.text2summarize[:100] }}
                 <span class="dots">
                   ...
@@ -79,6 +80,9 @@
                 <span class="more">
                   {{ entry.text2summarize[101:] }}
                 </span>
+              {% else %}
+                <i>No content available</i>
+              {% endif %}
                 <button onclick='myFunction({{ entry.id }})' class="myBtn">Read more</button>
               </p>
               
