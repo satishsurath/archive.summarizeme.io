@@ -3,6 +3,7 @@
 {% block content %}
 
     <h1>Summarize From URL</h1>
+    
     {% with messages = get_flashed_messages() %}
         {% if messages %}
             <div class="flashes">
@@ -12,7 +13,13 @@
             </div>
         {% endif %}
     {% endwith %}
-    
+    <script>
+        function toggleSubmitButton() {
+            // const acceptTermsCheckbox = document.getElementById('accept_terms');
+            // const submitButton = document.getElementById('submit_button');
+            // submitButton.disabled = !acceptTermsCheckbox.checked;
+        }
+        </script>
     <form action="" method="post" onsubmit="showProcessing()" novalidate>
         {{ form.hidden_tag() }}
         <p>
@@ -22,14 +29,13 @@
             <span style="color: red;">[{{ error }}]</span>
             {% endfor %}
             <br>
-
-            {{ form.accept_terms }} I accept the <a href="/privacy-policy" target="_blank">Privacy Policy</a> and Terms of Use<br>
+            {{ form.accept_terms(id='accept_terms', onclick="toggleSubmitButton()") }} I accept the <a href="/privacy-policy" target="_blank">Privacy Policy</a> and Terms of Use<br>
             {% for error in form.accept_terms.errors %}
             <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}            
+            {% endfor %}                
         </p>
         <br>
-        <p>{{ form.submit() }}</p>
+        <p>{{ form.submit(id='submit_button') }}</p>
         <br>
         <div id="processing" style="display:none; font-weight:bold;">
             Processing<br>

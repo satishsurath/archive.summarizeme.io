@@ -2,29 +2,53 @@
 
 {% block content %}
     <h1>Summarize From Text</h1>
-    <form action="" method="post" onsubmit="showProcessing()" novalidate>
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.summarize.label }}<br>
-            <small><em>{{ form.summarize(cols=50, rows=10, class_='form-control', placeholder='Enter text here...', onkeyup="document.getElementById('charNum').innerHTML = this.value.length") }}</em></small><br>
-            <span id="charNum">0</span> characters entered.
-            {% for error in form.summarize.errors %}
-            <span style="color: red;">[{{ error }}]</span>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="flashes">
+            {% for message in messages %}
+                <div class="alert alert-warning" role="alert">{{ message }}</div>
             {% endfor %}
-            <br>        
-            {{ form.accept_terms }} I accept the <a href="/privacy-policy" target="_blank">Privacy Policy</a> and Terms of Use<br>
-            {% for error in form.accept_terms.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}                
-        </p>
-        <br>
-        <p>{{ form.submit() }}</p>
-        <br>
-        <div id="processing" style="display:none; font-weight:bold;">
-            Processing<br>
-            <span id="dots"></span>
         </div>
-    </form>
+    {% endif %}
+{% endwith %}
+    <script>
+        function toggleSubmitButton() {
+            // const acceptTermsCheckbox = document.getElementById('accept_terms');
+            // const submitButton = document.getElementById('submit_button');
+            // submitButton.disabled = !acceptTermsCheckbox.checked;
+        }
+        function checkTermsAndFocus() {
+    // const acceptTermsCheckbox = document.getElementById('accept_terms');
+    // if (!acceptTermsCheckbox.checked) {
+    //     acceptTermsCheckbox.focus();
+    }
+}
+        </script>
+        
+        <form action="" method="post" onsubmit="showProcessing()" novalidate>
+            {{ form.hidden_tag() }}
+            <p>
+                {{ form.summarize.label }}<br>
+                <small><em>{{ form.summarize(cols=50, rows=10, class_='form-control', placeholder='Enter text here...', onkeyup="document.getElementById('charNum').innerHTML = this.value.length") }}</em></small><br>
+                <span id="charNum">0</span> characters entered.
+                {% for error in form.summarize.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+                <br>        
+                {{ form.accept_terms(id='accept_terms', onclick="toggleSubmitButton()") }} I accept the <a href="/privacy-policy" target="_blank">Privacy Policy</a> and Terms of Use<br>
+                {% for error in form.accept_terms.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}                
+            </p>
+            <br>
+            <p>{{ form.submit(id='submit_button',onclick="checkTermsAndFocus()") }}</p>
+            <br>
+            <div id="processing" style="display:none; font-weight:bold;">
+                Processing<br>
+                <span id="dots"></span>
+            </div>
+        </form>
+        
     </div>
     <div class="item">        
         {% if openAI_summary %}
