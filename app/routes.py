@@ -125,51 +125,58 @@ def privacypolicy():
 @app.route('/summarizeText', methods=['GET', 'POST'])
 def summarizeText():
     form = SummarizeFromText()
-
     if form.validate_on_submit():
         text2summarize = form.summarize.data
         text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
-
+        #Check if the text has already been summarized
         if check_if_hash_exists(text2summarize_hash):
+            #Get the summary from the database
             openAI_summary = get_summary_from_hash(text2summarize_hash)
             openAI_summary_JSON = read_from_file_json(text2summarize_hash + ".json")
             session['is_trimmed'] = False
             session['form_prompt'] = text2summarize
             session['number_of_chunks'] = "Retrieved from Database"
         else:
+            #Summarize the text using OpenAI API
             openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(text2summarize)
             openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
-
+        # Now, we have all the data, Save the summary to the Session variables
         session['openAI_summary'] = openAI_summary
         session['openAI_summary_JSON'] = openAI_summary_JSON
         session['text2summarize'] = text2summarize
         session['url'] = ""
         session['content_written'] = False
+        # Reload the page so we can process the template with all the Session Variables
         return redirect(url_for('summarizeText'))
-
+    # Check if Session variables are set
     if session.get('openAI_summary'):
         text2summarize = session.get('text2summarize')
+        #Recheck if the text2summarize is not None
         if text2summarize is not None:
             text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
         else:
+            #If the text2summarize is None, then we have an Error. Let the user know
             flash("Unable to extract content from the provided URL. Please try another URL.")
-            return redirect(url_for('summarizeURL'))
-
+            return redirect(url_for('summarizeText'))
+        #Check if the text has already been written to Database or if it exists in the database
         if not check_if_hash_exists(text2summarize_hash) and not session.get('content_written', False):
+            #Write the content to the database
             write_to_db(0, "0", text2summarize, session['openAI_summary'])
+            #Write the json to the file
             write_json_to_file(text2summarize_hash + ".json", session['openAI_summary_JSON'])
             if check_folder_exists(app.config['UPLOAD_CONTENT']):
+                #Write the content to the file
                 write_content_to_file(text2summarize_hash + ".txt", text2summarize)
+            #Set the content_written to True
             session['content_written'] = True
-
         token_count = num_tokens_from_string(text2summarize)
         avg_tokens_per_sentence = avg_sentence_length(text2summarize)
-
+        #Check if the openAI_summary_JSON is not None
         if session['openAI_summary_JSON']:
             openAI_summary_str = json.dumps(session['openAI_summary_JSON'], indent=4)
         else:
+            #If the openAI_summary_JSON is None, then we don't have the JSON. Let the user know
             openAI_summary_str = "Retrieved from Database"
-
         return render_template(
             'summarizeText.html',
             title='Summarize Text',
@@ -454,12 +461,13 @@ def logout():
 def logs():
     form = DeleteEntry()
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 5, type=int)
+    per_page = request.args.get('per_page', 25, type=int)
     entries = Entry_Post.query.order_by(Entry_Post.id.desc()).paginate(page=page, per_page=per_page)
     return render_template('logs.html', entries=entries)   
 
 # writing route for url_for('delete_entry', entry_id=entry.id) 
 @app.route('/delete_entry/<entry_id>', methods=['GET', 'POST'])
+@login_required
 def delete_entry(entry_id):
   # delete the entry from the database
   delete_entry_from_db(entry_id)
