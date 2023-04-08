@@ -141,3 +141,6 @@ app/static/uploads/
 
 #ignore the sessions folder
 sessions/
+
+#ignore the logs folder
+logs/
