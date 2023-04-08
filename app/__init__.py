@@ -25,8 +25,6 @@ login_manager.init_app(app)
 from app import routes, models
 from app.models import Entry_Post
 
-
-
 # ---------------  Configure logging --------------- #
 
 # Overloading the logging formatter to include the request and session data
