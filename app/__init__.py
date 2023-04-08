@@ -43,7 +43,7 @@ if not app.debug:
             toaddrs=app.config['ADMINS'], subject='SummarizeMe.io Failure',
             credentials=auth, secure=secure)
         mail_handler.setLevel(logging.ERROR)
-        email_handler.setFormatter(SessionDataFormatter(
+        mail_handler.setFormatter(SessionDataFormatter(
             '%(asctime)s %(levelname)s: %(message)s '
             '[in %(pathname)s:%(lineno)d]\n'
             'Request data: %(request_data)s\n'
