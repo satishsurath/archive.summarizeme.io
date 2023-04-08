@@ -25,7 +25,19 @@ login_manager.init_app(app)
 from app import routes, models
 from app.models import Entry_Post
 
+
+
 # ---------------  Configure logging --------------- #
+
+# Overloading the logging formatter to include the request and session data
+class SessionDataFormatter(logging.Formatter):
+    def format(self, record):
+        record.request_data = request
+        record.session_data = session
+        record.user_agent = request.user_agent
+        return super().format(record)
+
+
 # This is the logging configuration for the app
 # Check if the app is in debug mode
 if not app.debug:
