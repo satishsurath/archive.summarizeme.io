@@ -8,7 +8,7 @@ import hashlib
 from nltk.tokenize import sent_tokenize
 from app import app, db, login_manager
 from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, DeleteEntry, UploadPDFForm
-from app.models import Entry_Post
+from app.models import Entry_Post, oAuthUser, Entry_Posts_oAuthUsers
 from flask import render_template, flash, redirect, url_for, request, session
 from trafilatura import extract
 from trafilatura.settings import use_config
@@ -21,6 +21,7 @@ from flask_wtf.csrf import generate_csrf
 from werkzeug.utils import secure_filename
 from pdfminer.high_level import extract_text
 from io import BytesIO
+from flask_dance.contrib.linkedin import linkedin
 
 
 # -------------------- Utility functions --------------------
@@ -55,8 +56,20 @@ def inject_csrf_token():
 def nl2br(value):
     return value.replace('\n', '<br>')
 
+# Return the value of the preferred locale from a MultiLocaleString
+def preferred_locale_value(multi_locale_string):
+    """
+    Extract the value of the preferred locale from a MultiLocaleString
 
-# -------------------- Basic Authentication --------------------
+    https://docs.microsoft.com/en-us/linkedin/shared/references/v2/object-types#multilocalestring
+    """
+    preferred = multi_locale_string["preferredLocale"]
+    locale = "{language}_{country}".format(
+        language=preferred["language"], country=preferred["country"]
+    )
+    return multi_locale_string["localized"][locale]
+
+# -------------------- Basic Admin Authentication --------------------
 
 
 #Define the Username and Password to access the Logs
@@ -116,6 +129,20 @@ global_pdf_filename = ""
 @app.route('/')
 @app.route('/index')
 def index():
+    if linkedin.authorized:
+      resp = linkedin.get("me")
+      assert resp.ok
+      data = resp.json()
+      print(data)
+      #resp = linkedin.get("emailAddress?q=members&projection=(elements*(handle~))")
+      #assert resp.ok
+      #data = resp.json()
+      #email = data['elements'][0]['handle~']['emailAddress']
+      name = "{first} {last}".format(
+        first=preferred_locale_value(data["firstName"]),
+        last=preferred_locale_value(data["lastName"]),
+      )
+      return render_template('index.html', name=name)  
     return render_template('index.html')
 
 @app.route('/privacy-policy')
@@ -161,7 +188,7 @@ def summarizeText():
         #Check if the text has already been written to Database or if it exists in the database
         if not check_if_hash_exists(text2summarize_hash) and not session.get('content_written', False):
             #Write the content to the database
-            write_to_db(0, "0", text2summarize, session['openAI_summary'])
+            write_entry_to_db(0, "0", text2summarize, session['openAI_summary'])
             #Write the json to the file
             write_json_to_file(text2summarize_hash + ".json", session['openAI_summary_JSON'])
             if check_folder_exists(app.config['UPLOAD_CONTENT']):
@@ -243,7 +270,7 @@ def summarizeURL():
         #text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
         # If we calculated the summary with OpenAI API, we need to write it to the database
         if not check_if_hash_exists(text2summarize_hash):
-          write_to_db(1,session['url'],text2summarize,session['openAI_summary_URL'])
+          write_entry_to_db(1,session['url'],text2summarize,session['openAI_summary_URL'])
           session['content_written'] = True
           # Calculate token count and average tokens per sentence
           token_count = num_tokens_from_string(text2summarize)
@@ -361,7 +388,7 @@ def summarizePDF():
             # If we calculated the summary with OpenAI API, we need to write it to the database
             if not check_if_hash_exists(text2summarize_hash):
                 print("summarizePDF - 11")
-                write_to_db(2, session['pdf_filename'], text2summarize, session['openAI_summary_PDF'])
+                write_entry_to_db(2, session['pdf_filename'], text2summarize, session['openAI_summary_PDF'])
 
                 # Calculate token count and average tokens per sentence
                 token_count = num_tokens_from_string(text2summarize)
@@ -511,6 +538,26 @@ def openAI_debug():
     else:
         return render_template('openai-debug.html', title='openAI-debug', form=form, openai_key = os.getenv("OPENAI_API_KEY"))
 
+@app.route("/Signin", methods=['GET', 'POST'])
+def signin():
+    if not linkedin.authorized:
+        return redirect(url_for("linkedin.login"))
+    resp = linkedin.get("me")
+    #get email 
+    
+    assert resp.ok
+    data = resp.json()
+    print(data)
+    name = "{first} {last}".format(
+        first=preferred_locale_value(data["firstName"]),
+        last=preferred_locale_value(data["lastName"]),
+    )
+    return "You are {name} on LinkedIn".format(name=name)
+
+
+# Write a function to check linkedin.authorized, 
+
+
 
 
 
@@ -618,7 +665,7 @@ def get_summary_from_hash(text2summarize_hash):
     return False
 
 # Function to write to the database
-def write_to_db(posttype, url, text2summarizedb, openAIsummarydb):
+def write_entry_to_db(posttype, url, text2summarizedb, openAIsummarydb):
   try:
       if not session.get('content_written', False):
           text2summarize_hash = hashlib.sha256(text2summarizedb.encode('utf-8')).hexdigest()
@@ -658,7 +705,31 @@ def get_entry_from_hash(text2summarize_hash):
   except:
     return False
 
+#Given the linkedin.get("me").json, sanitize, verify the JSON file and then save the user info to the database to oAuth table
+def write_user_to_db(user_info):
+  try:
+    user = oAuth.query.filter_by(email=user_info['emailAddress']).first()
+    if user:
+      return True
+    else:
+      user = oAuth(name=user_info['localizedFirstName'], email=user_info['emailAddress'], picture=user_info['profilePicture']['displayImage~']['elements'][0]['identifiers'][0]['identifier'])
+      db.session.add(user)
+      db.session.commit()
+      db.session.close()
+      return True
+  except:
+    return False
 
+#check if user exists in  database to oAuth table, if not create a new user and add to database
+def check_if_user_exists(user_info):   
+  try:
+    user = oAuth.query.filter_by(email=user_info['emailAddress']).first()
+    if user:
+      return True
+    else:
+      return False
+  except:
+    return False
 
 # -------------------- File Operations --------------------
 
@@ -719,7 +790,6 @@ def check_folder_exists(folder_path):
     return True
   except:
     return False
-
 
 
 # -------------------- Helper functions  --------------------

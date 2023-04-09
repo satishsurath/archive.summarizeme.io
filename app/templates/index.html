@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
         <h1 class="center-align">SummarizeMe.io</h1>
+        {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <div class="flashes">
+                        {% for message in messages %}
+                        <div class="alert alert-warning" role="alert">{{ message }}</div>
+                        {% endfor %}
+                </div>
+                {% endif %}
+        {% endwith %}
         <details>
         <summary class="homepage-heading">About</summary>                
         <h2 class="center-align">Productivity Upgrade</h2>
@@ -111,11 +120,24 @@
                                 </a>
                         </li>
                         </ul>
-                </ul>
-                 
-                
-                
+                </ul>    
         </h3>
+        <hr>
+        {% if name: %}
+                <p class="center-align">  
+                        Welcome, {{ name }}
+                </p>
+
+
+        {% else:  %}
+                <p class="center-align">  
+                        <a href="{{ url_for('signin') }}" target="_blank"> 
+                                SignIn with Linkedin
+                        </a>
+                        <br>
+                        To save and retrieve your summaries later on.
+                </p>  
+        {% endif %}         
         <hr>
         <br>
         <details>

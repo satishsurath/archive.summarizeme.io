@@ -2,7 +2,7 @@ import os
 import logging
 from logging.handlers import SMTPHandler, RotatingFileHandler
 
-from flask import Flask, request, session
+from flask import Flask, request, session, has_request_context
 from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -18,11 +18,12 @@ migrate = Migrate(app, db)
 # Initialize the session
 Session(app)
 
+# ---------------  Flash-Dance oAuth Login - Linkedin  --------------- #
 # Initialize the linkedin blueprint
-linkedin_bp = make_linkedin_blueprint(scope=["r_liteprofile"])
+linkedin_bp = make_linkedin_blueprint(scope="r_emailaddress,r_liteprofile")
 app.register_blueprint(linkedin_bp, url_prefix="/login")
 
-
+# ---------------  Login Manager --------------- #
 # Initialize the login manager
 login_manager = LoginManager()
 login_manager.login_view = 'adminlogin'
@@ -32,6 +33,18 @@ from app import routes, models
 from app.models import Entry_Post
 
 # ---------------  Configure logging --------------- #
+
+class RequestFormatter(logging.Formatter):
+    def format(self, record):
+        if has_request_context():
+            record.url = request.url
+            record.remote_addr = request.remote_addr
+            record.user_agent = request.user_agent
+        else:
+            record.url = None
+            record.remote_addr = None
+            record.user_agent = None
+        return super().format(record)
 
 # Overloading the logging formatter to include the request and session data
 class SessionDataFormatter(logging.Formatter):
@@ -70,6 +83,14 @@ if not app.debug:
 
     if not os.path.exists('logs'):
         os.mkdir('logs')
+    # Create a separate logger for startup logs
+    startup_logger = logging.getLogger('startup_logger')
+    startup_logger.setLevel(logging.INFO)
+    startup_file_handler = RotatingFileHandler('logs/startup.log', maxBytes=10240, backupCount=10)
+    file_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
+    startup_file_handler.setFormatter(file_formatter)
+    startup_logger.addHandler(startup_file_handler)
+    
     file_handler = RotatingFileHandler(
         'logs/summarizeme.log', 
         maxBytes=10240, 
@@ -85,7 +106,9 @@ if not app.debug:
     file_handler.setLevel(logging.INFO)
     app.logger.addHandler(file_handler)
     app.logger.setLevel(logging.INFO)
-    app.logger.info('--------SummarizeMe startup-----------')
+
+    # Log the startup message using the separate logger
+    startup_logger.info('--------SummarizeMe startup-----------')
 
 
 # ---------------  shell context processor --------------- #
