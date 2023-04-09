@@ -3,7 +3,7 @@ import os
 import json
 import hashlib
 from app import app, db, login_manager
-from app.models import Entry_Post, oAuthUser, Entry_Posts_oAuthUsers
+from app.models import Entry_Post, oAuthUser, Entry_Posts_History
 from flask import session
 # -------------------- File Operations --------------------
 
@@ -94,19 +94,35 @@ def get_summary_from_hash(text2summarize_hash):
 
 # Function to write to the database
 def write_entry_to_db(posttype, url, text2summarizedb, openAIsummarydb):
-  try:
-      if not session.get('content_written', False):
-          text2summarize_hash = hashlib.sha256(text2summarizedb.encode('utf-8')).hexdigest()
-          entry = Entry_Post(posttype=posttype, url=url, text2summarize=text2summarizedb, openAIsummary=openAIsummarydb, text2summarize_hash=text2summarize_hash)
-          db.session.add(entry)
-          db.session.commit()
-          db.session.close()
-          session['content_written'] = True
-          return True
-  except Exception as e:  # Catch the exception
-      print("Error occurred. Could not write to database.")
-      print(f"Error details: {e}")  # Print the details of the error
-      return False
+    try:
+        if not session.get('content_written', False):
+            text2summarize_hash = hashlib.sha256(text2summarizedb.encode('utf-8')).hexdigest()
+            entry = Entry_Post(posttype=posttype, url=url, text2summarize=text2summarizedb, openAIsummary=openAIsummarydb, text2summarize_hash=text2summarize_hash)
+            db.session.add(entry)
+            db.session.commit()
+
+            # Check if user is logged in
+            if session.get('linkedin_id', False):
+                user_linkedin = session['linkedin_id']
+                user = oAuthUser.query.filter_by(linkedin_id=user_linkedin).first()
+                if user:
+                    # User exists, write to entry_history table
+                    #entry_history = Entry_Posts_History(oAuthUser_id=user.id, entry_id=entry.id)
+                    entry_history = Entry_Posts_History(oAuthUser_id=user.id, entry_post_id=entry.id)
+                    db.session.add(entry_history)
+                    db.session.commit()
+
+            session['content_written'] = True
+            return True
+    except Exception as e:  # Catch the exception
+        db.session.rollback()  # Rollback the session
+        print("Error occurred. Could not write to database.")
+        print(f"Error details: {e}")  # Print the details of the error
+        app.logger.error("Error occurred. Could not write to database.")
+        app.logger.error(f"Error details: {e}")  # Log the details of the error
+        return False
+    finally:
+        db.session.close()
 
 # delete_entry_from_db(entry_id)
 def delete_entry_from_db(entry_id):
@@ -116,6 +132,11 @@ def delete_entry_from_db(entry_id):
       db.session.delete(entry)
       db.session.commit()
       db.session.close()
+      entry_history = Entry_Posts_History.query.filter_by(entry_id=entry_id).first()
+      if entry_history:
+        db.session.delete(entry_history)
+        db.session.commit()
+        db.session.close()
       return True
     else:
       return False
@@ -134,24 +155,33 @@ def get_entry_from_hash(text2summarize_hash):
     return False
 
 #Given the linkedin.get("me").json, sanitize, verify the JSON file and then save the user info to the database to oAuth table
-def write_user_to_db(user_info):
+#check if user exists in  database to oAuth table, if not create a new user and add to database
+def write_user_to_db():
   try:
-    user = oAuthUser.query.filter_by(email=user_info['emailAddress']).first()
+    user_linkedin = session['linkedin_id']
+    user = oAuthUser.query.filter_by(linkedin_id=user_linkedin).first()
     if user:
+      #User exists, update the session variables
+      Print("Welcome back")
       return True
     else:
-      user = oAuthUser(name=user_info['localizedFirstName'], email=user_info['emailAddress'], picture=user_info['profilePicture']['displayImage~']['elements'][0]['identifiers'][0]['identifier'])
+      #User does not exist, create a new user and add to database
+      user = oAuthUser(name=session['name'], email=session['email'], linkedin_id=session['linkedin_id'])
       db.session.add(user)
       db.session.commit()
       db.session.close()
       return True
-  except:
+  except Exception as e:  # Catch the exception:
+    print("Error occurred. Could not write to database.")
+    print(f"Error details: {e}")  # Print the details of the error
+    app.logger.error("Error occurred. Could not write to database.")
+    app.logger.error(f"Error details: {e}")  # Log the details of the error
     return False
 
 #check if user exists in  database to oAuth table, if not create a new user and add to database
-def check_if_user_exists(user_info):   
+def check_if_user_exists(user_email):   
   try:
-    user = oAuthUser.query.filter_by(email=user_info['emailAddress']).first()
+    user = oAuthUser.query.filter_by(email=user_email).first()
     if user:
       return True
     else:

@@ -1,0 +1,22 @@
+<!-- user_status.html -->
+<hr>
+{% if name: %}
+    <p class="center-align">  
+        Welcome, {{ name }}
+        <a href="{{ url_for('signout') }}" target="_blank"> 
+            Signout
+        </a>                        
+    </p>
+{% else:  %}
+    <p class="center-align">  
+        <a href="{{ url_for('signin') }}" target="_blank"> 
+            Sign In with Linkedin
+        </a>
+        <br>
+        To save and retrieve your summaries later on.
+        <br>
+        *Experimental Feature*
+    </p>  
+{% endif %}         
+<hr>
+<br>

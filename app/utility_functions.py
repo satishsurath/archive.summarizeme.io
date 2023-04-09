@@ -8,11 +8,6 @@ def num_tokens_from_string(prompt):
     num_tokens = len(encoding.encode(prompt))
     return num_tokens
 
-#This is the function that will be called to trip the text to the maximum number of tokens
-def trim_text_to_tokens(text, max_tokens):
-    encoding = tiktoken.get_encoding("cl100k_base")
-    return encoding.decode(encoding.encode(text)[:max_tokens])
-
 #calculate average sentence length in tokens
 def avg_sentence_length(text):
     encoding = tiktoken.get_encoding("cl100k_base")
@@ -35,3 +30,5 @@ def preferred_locale_value(multi_locale_string):
         language=preferred["language"], country=preferred["country"]
     )
     return multi_locale_string["localized"][locale]
+
+

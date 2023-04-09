@@ -122,27 +122,7 @@
                         </ul>
                 </ul>    
         </h3>
-        <hr>
-        {% if name: %}
-                <p class="center-align">  
-                        Welcome, {{ name }}
-                        <a href="{{ url_for('signout') }}" target="_blank"> 
-                                Signout
-                        </a>                        
-                </p>
-
-
-        {% else:  %}
-                <p class="center-align">  
-                        <a href="{{ url_for('signin') }}" target="_blank"> 
-                                SignIn with Linkedin
-                        </a>
-                        <br>
-                        To save and retrieve your summaries later on.
-                </p>  
-        {% endif %}         
-        <hr>
-        <br>
+        {% include 'user_status.html' %}
         <details>
                 <summary class="homepage-heading">Release Notes</summary>
 

@@ -43,6 +43,7 @@
             <br>
             <p>{{ form.submit(id='submit_button',onclick="checkTermsAndFocus()") }}</p>
             <br>
+            {% include 'user_status.html' %}
             <div id="processing" style="display:none; font-weight:bold;">
                 Processing<br>
                 <span id="dots"></span>
