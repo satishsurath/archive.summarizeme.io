@@ -126,6 +126,9 @@
         {% if name: %}
                 <p class="center-align">  
                         Welcome, {{ name }}
+                        <a href="{{ url_for('signout') }}" target="_blank"> 
+                                Signout
+                        </a>                        
                 </p>
 
 

@@ -6,7 +6,7 @@ import tiktoken
 import nltk
 import hashlib
 from nltk.tokenize import sent_tokenize
-from app import app, db, login_manager
+from app import app, db, login_manager, linkedin_bp
 from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, DeleteEntry, UploadPDFForm
 from app.models import Entry_Post, oAuthUser, Entry_Posts_oAuthUsers
 from app.db_file_operations import write_json_to_file, write_content_to_file, read_from_file_json, read_from_file_content, check_folder_exists
@@ -42,7 +42,6 @@ def inject_csrf_token():
 
 # -------------------- Basic Admin Authentication --------------------
 
-
 #Define the Username and Password to access the Logs
 summarizeMeUser = os.getenv("summarizeMeUser") or "user1"
 summarizeMePassword = os.getenv("summarizeMePassword") or "pass1"
@@ -70,7 +69,6 @@ def request_loader(request):
   user.id = username
   user.is_authenticated = request.form['pw'] == users[username]['pw']
   return user
-
 
 
 # -------------------- Flask app configurations --------------------
@@ -462,6 +460,7 @@ def logs():
     entries = Entry_Post.query.order_by(Entry_Post.id.desc()).paginate(page=page, per_page=per_page)
     return render_template('logs.html', entries=entries)   
 
+
 # writing route for url_for('delete_entry', entry_id=entry.id) 
 @app.route('/delete_entry/<entry_id>', methods=['GET', 'POST'])
 @login_required
@@ -509,7 +508,7 @@ def openAI_debug():
     else:
         return render_template('openai-debug.html', title='openAI-debug', form=form, openai_key = os.getenv("OPENAI_API_KEY"))
 
-@app.route("/Signin", methods=['GET', 'POST'])
+@app.route("/signin", methods=['GET', 'POST'])
 def signin():
     if not linkedin.authorized:
         return redirect(url_for("linkedin.login"))
@@ -524,6 +523,14 @@ def signin():
         last=preferred_locale_value(data["lastName"]),
     )
     return "You are {name} on LinkedIn".format(name=name)
+
+#Signout route for blueprints
+@app.route('/signout')
+def signout():
+  logout_user()
+  session.clear()  # Clear session data
+  linkedin_bp.token = None
+  return redirect(url_for('index'))
 
 
 # Write a function to check linkedin.authorized, 
