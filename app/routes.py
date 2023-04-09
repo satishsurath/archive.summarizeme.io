@@ -163,10 +163,11 @@ def summarizeText():
         session['text2summarize'] = text2summarize
         session['url'] = ""
         session['content_written'] = False
+        session['content_display_Text'] = False
         # Reload the page so we can process the template with all the Session Variables
         return redirect(url_for('summarizeText'))
     # Check if Session variables are set
-    if session.get('openAI_summary'):
+    if session.get('openAI_summary') and not session.get('content_display_Text', False):
         text2summarize = session.get('text2summarize')
         #Recheck if the text2summarize is not None
         if text2summarize is not None:
@@ -196,6 +197,7 @@ def summarizeText():
             openAI_summary_str = "Retrieved from Database"
         if not session.get('name', False):
           #If the user is not logged in, then we don't need to show the email address
+          session['content_display_Text'] = True
           return render_template(
               'summarizeText.html',
               title='Summarize Text',
@@ -211,6 +213,7 @@ def summarizeText():
           )
         else:
           #If the user is logged in, then we need to show the email address
+          session['content_display_Text'] = True
           return render_template(
               'summarizeText.html',
               title='Summarize Text',
