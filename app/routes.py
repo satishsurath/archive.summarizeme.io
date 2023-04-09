@@ -240,36 +240,36 @@ def summarizeText():
 
 @app.route('/summarizeURL', methods=['GET', 'POST'])
 def summarizeURL():
-    print("summarizeURL - 1")
+    #print("summarizeURL - 1")
     form = SummarizeFromURL()
     #global openAI_summary, openAI_summary_JSON, text2summarize, url, global_is_trimmed, global_form_prompt, global_number_of_chunks, content_written
     #if not session.get('content_written', False):
     if form.validate_on_submit() and request.method == 'POST':
-      print("summarizeURL - 2")
+      #print("summarizeURL - 2")
       newconfig = use_config()
-      print("summarizeURL - 3")
+      #print("summarizeURL - 3")
       newconfig.set("DEFAULT", "EXTRACTION_TIMEOUT", "0")
       downloaded = trafilatura.fetch_url(form.summarize.data)
-      print("summarizeURL - 4")
+      #print("summarizeURL - 4")
       if downloaded is None:
-        print("summarizeURL - 5")
+        #print("summarizeURL - 5")
         flash("Unable to download content from the provided URL. Please try another URL.")
         return redirect(url_for('summarizeURL'))
-      print("summarizeURL - 6")
+      #print("summarizeURL - 6")
       session['url'] = form.summarize.data
-      print("summarizeURL - 7")
+      #print("summarizeURL - 7")
       text2summarize = extract(downloaded, config=newconfig)
-      print("summarizeURL - 8")
+      #print("summarizeURL - 8")
       if text2summarize is not None:
-        print("summarizeURL - 9")
+        #print("summarizeURL - 9")
         text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
       else:
-        print("summarizeURL - 10")
+        #print("summarizeURL - 10")
         flash("Unable to extract content from the provided URL. Please try another URL.")
         return redirect(url_for('summarizeURL'))
       #check if the hash exists in the Local Database, before calling the OpenAI API
       if check_if_hash_exists(text2summarize_hash):
-        print("summarizeURL - 11")
+        #print("summarizeURL - 11")
         #Get the summary from the database
         openAI_summary = get_summary_from_hash(text2summarize_hash)
         openAI_summary_JSON = read_from_file_json(text2summarize_hash+".json")
@@ -277,7 +277,7 @@ def summarizeURL():
         session['form_prompt'] = text2summarize
         session['number_of_chunks'] = "Retrieved from Database"
       else:
-        print("summarizeURL - 12")
+        #print("summarizeURL - 12")
         #Summarize the URL using OpenAI API
         openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(text2summarize)
         openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
@@ -285,39 +285,39 @@ def summarizeURL():
         #write_json_to_file(text2summarize_hash+".json",openAI_summary_JSON)
         #if check_folder_exists(app.config['UPLOAD_CONTENT']):
         #  write_content_to_file(text2summarize_hash + ".txt", text2summarize)
-      print("summarizeURL - 12.1")
+      #print("summarizeURL - 12.1")
       session['openAI_summary_URL'] = openAI_summary
       session['openAI_summary_URL_JSON'] = openAI_summary_JSON
       session['text2summarize_URL'] = text2summarize
       session['url'] = form.summarize.data
       session['content_written'] = False
       session['content_display_URL'] = False
-      print("summarizeURL - 12.2")  
+      #print("summarizeURL - 12.2")  
       # Reload the page so we can process the template with all the Session Variables
       return redirect(url_for('summarizeURL'))
     # Check if Session variables are set
     if session.get('openAI_summary_URL') and not session.get('content_display_URL', False):
-      print("summarizeURL - 13")
+      #print("summarizeURL - 13")
       text2summarize = session.get('text2summarize_URL')
       #Recheck if the text2summarize is not None
       if text2summarize is not None:
-        print("summarizeURL - 14")
+        #print("summarizeURL - 14")
         text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
       else:
-        print("summarizeURL - 15")
+        #print("summarizeURL - 15")
         #If the text2summarize is None, then we have an Error. Let the user know
         flash("Unable to extract content from the provided URL. Please try another URL.")
         return redirect(url_for('summarizeURL'))
       #Check if the text has already been written to Database or if it exists in the database         
       if not check_if_hash_exists(text2summarize_hash) and not session.get('content_written', False):
-        print("summarizeURL - 16")
+        #print("summarizeURL - 16")
         #Write the content to the database
         write_entry_to_db(1, session['url'], text2summarize, session['openAI_summary_URL'])
         #Write the json to the file
         write_json_to_file(text2summarize_hash + ".json", session['openAI_summary_URL_JSON'])
-        print("summarizeURL - 17")
+        #print("summarizeURL - 17")
         if check_folder_exists(app.config['UPLOAD_CONTENT']):
-          print("summarizeURL - 18")
+          #print("summarizeURL - 18")
           #Write the content to the file
           write_content_to_file(text2summarize_hash + ".txt", text2summarize)
         #Set the content_written to True
@@ -326,15 +326,15 @@ def summarizeURL():
       avg_tokens_per_sentence = avg_sentence_length(text2summarize)
       #check if the openAI_summary_JSON is not None
       if session['openAI_summary_URL_JSON']:
-        print("summarizeURL - 19")
+        #print("summarizeURL - 19")
         openAI_summary_str = json.dumps(session['openAI_summary_URL_JSON'], indent=4)
       else:
-        print("summarizeURL - 20")
+        #print("summarizeURL - 20")
         #If the openAI_summary_JSON is None, then we don't have the JSON. Let the user know
         openAI_summary_str = "Retrieved from Database"
       #Now that we have the summary, we can render the page
       if not session.get('name', False):
-        print("summarizeURL - 21")
+        #print("summarizeURL - 21")
         #If the user is not logged in, then we don't need to show the name
         session['content_display_URL'] = True
         return render_template(
@@ -352,7 +352,7 @@ def summarizeURL():
           text2summarize_hash=text2summarize_hash
         )
       else:
-        print("summarizeURL - 22")
+        #print("summarizeURL - 22")
         #if the user is logged in, then we need to show the name
         session['content_display_URL'] = True
         return render_template(
@@ -371,14 +371,14 @@ def summarizeURL():
           name=session['name']
         )             
     else:
-      print("summarizeURL - 23")
+      #print("summarizeURL - 23")
       clear_session()
       session['content_written'] = False
       if not session.get('name', False):
-        print("summarizeURL - 24")
+        #print("summarizeURL - 24")
         return render_template('summarizeURL.html', title='Summarize Webpage', form=form)
       else:
-        print("summarizeURL - 25")
+        #print("summarizeURL - 25")
         return render_template('summarizeURL.html', title='Summarize Webpage', form=form, name=session['name'])
 
 @app.route('/summarizePDF', methods=['GET', 'POST'])
