@@ -11,6 +11,7 @@ from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, De
 from app.models import Entry_Post, oAuthUser, Entry_Posts_oAuthUsers
 from app.db_file_operations import write_json_to_file, write_content_to_file, read_from_file_json, read_from_file_content, check_folder_exists
 from app.db_file_operations import check_if_hash_exists, get_summary_from_hash, write_entry_to_db, delete_entry_from_db, get_entry_from_hash, write_user_to_db, check_if_user_exists
+from app.utility_functions import num_tokens_from_string, trim_text_to_tokens, avg_sentence_length, nl2br, preferred_locale_value 
 from flask import render_template, flash, redirect, url_for, request, session
 from trafilatura import extract
 from trafilatura.settings import use_config
@@ -29,22 +30,6 @@ from flask_dance.contrib.linkedin import linkedin
 
 # -------------------- Utility functions --------------------
 
-#This is the function that will be called to summarize the text
-def num_tokens_from_string(prompt):
-    encoding = tiktoken.get_encoding("cl100k_base")
-    num_tokens = len(encoding.encode(prompt))
-    return num_tokens
-
-#This is the function that will be called to trip the text to the maximum number of tokens
-def trim_text_to_tokens(text, max_tokens):
-    encoding = tiktoken.get_encoding("cl100k_base")
-    return encoding.decode(encoding.encode(text)[:max_tokens])
-
-#calculate average sentence length in tokens
-def avg_sentence_length(text):
-    encoding = tiktoken.get_encoding("cl100k_base")
-    tokens = encoding.encode(text)
-    return len(tokens)/len(text.split('.')) 
 
 #Used to inject the enumerate function into the templates
 @app.context_processor
@@ -54,23 +39,6 @@ def inject_enumerate():
 @app.context_processor
 def inject_csrf_token():
     return dict(csrf_token=generate_csrf())
-
-# Custom Jinja filter to replace newline characters with <br> tags
-def nl2br(value):
-    return value.replace('\n', '<br>')
-
-# Return the value of the preferred locale from a MultiLocaleString
-def preferred_locale_value(multi_locale_string):
-    """
-    Extract the value of the preferred locale from a MultiLocaleString
-
-    https://docs.microsoft.com/en-us/linkedin/shared/references/v2/object-types#multilocalestring
-    """
-    preferred = multi_locale_string["preferredLocale"]
-    locale = "{language}_{country}".format(
-        language=preferred["language"], country=preferred["country"]
-    )
-    return multi_locale_string["localized"][locale]
 
 # -------------------- Basic Admin Authentication --------------------
 

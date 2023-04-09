@@ -29,7 +29,7 @@ login_manager = LoginManager()
 login_manager.login_view = 'adminlogin'
 login_manager.init_app(app)
 
-from app import db_file_operations, routes, models
+from app import db_file_operations, routes, models, utility_functions
 from app.models import Entry_Post
 
 # ---------------  Configure logging --------------- #
