@@ -611,7 +611,8 @@ def logs():
             entries = None
     else:
         return redirect(url_for('adminlogin'))
-    return render_template('logs.html', entries=entries)
+    return render_template('logs.html', entries=entries, is_authenticated=current_user.is_authenticated)
+
 
 # writing route for url_for('delete_entry', entry_id=entry.id) 
 @app.route('/delete_entry/<entry_id>', methods=['GET', 'POST'])
