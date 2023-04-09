@@ -8,6 +8,11 @@ class Config(object):
     # Configure database
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.sqlite3')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # Configure OAuth for LinkedIn
+    LINKEDIN_OAUTH_CLIENT_ID = os.environ.get("LINKEDIN_OAUTH_CLIENT_ID")
+    LINKEDIN_OAUTH_CLIENT_SECRET = os.environ.get("LINKEDIN_OAUTH_CLIENT_SECRET")
+
     # Configure Logging
     LOG_TO_STDOUT = os.environ.get('LOG_TO_STDOUT')
     #  email server 

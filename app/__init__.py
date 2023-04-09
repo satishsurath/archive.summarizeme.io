@@ -2,12 +2,13 @@ import os
 import logging
 from logging.handlers import SMTPHandler, RotatingFileHandler
 
-from flask import Flask
+from flask import Flask, request, session
 from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_session import Session
 from flask_login import LoginManager
+from flask_dance.contrib.linkedin import make_linkedin_blueprint, linkedin
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -17,9 +18,14 @@ migrate = Migrate(app, db)
 # Initialize the session
 Session(app)
 
+# Initialize the linkedin blueprint
+linkedin_bp = make_linkedin_blueprint(scope=["r_liteprofile"])
+app.register_blueprint(linkedin_bp, url_prefix="/login")
+
+
 # Initialize the login manager
 login_manager = LoginManager()
-login_manager.login_view = 'login'
+login_manager.login_view = 'adminlogin'
 login_manager.init_app(app)
 
 from app import routes, models

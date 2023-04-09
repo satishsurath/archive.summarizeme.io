@@ -436,12 +436,10 @@ def share(hash):
   else:
     return render_template('404.html'), 404
 
-   
-
 
 # Routes for the login and logout pages
-@app.route('/login', methods=['GET', 'POST'])
-def login():
+@app.route('/admin-login', methods=['GET', 'POST'])
+def adminlogin():
   if request.method == 'POST':
     username = request.form.get('username')
     if request.form.get('pw') == users.get(username, {}).get('pw'):
@@ -449,11 +447,12 @@ def login():
       user.id = username
       login_user(user)
       return redirect(url_for('logs'))
-  return render_template('login.html')
+  return render_template('adminlogin.html')
 
 @app.route('/logout')
 def logout():
   logout_user()
+  session.clear()  # Clear session data
   return redirect(url_for('index'))
 
 @app.route('/logs', methods=['GET', 'POST'])
