@@ -9,7 +9,8 @@ from nltk.tokenize import sent_tokenize
 from app import app, db, login_manager
 from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, DeleteEntry, UploadPDFForm
 from app.models import Entry_Post, oAuthUser, Entry_Posts_oAuthUsers
-from app.db_operations import write_json_to_file, write_content_to_file, read_from_file_json, read_from_file_content, check_folder_exists
+from app.db_file_operations import write_json_to_file, write_content_to_file, read_from_file_json, read_from_file_content, check_folder_exists
+from app.db_file_operations import check_if_hash_exists, get_summary_from_hash, write_entry_to_db, delete_entry_from_db, get_entry_from_hash, write_user_to_db, check_if_user_exists
 from flask import render_template, flash, redirect, url_for, request, session
 from trafilatura import extract
 from trafilatura.settings import use_config
@@ -642,96 +643,6 @@ def openAI_summarize_chunk(form_prompt):
         global_number_of_chunks = 1
         return response, is_trimmed, form_prompt, global_number_of_chunks
 
-# -------------------- Database Operations --------------------
-
-# function to check if the hash of text2summarize is already in the database then retun
-def check_if_hash_exists(text2summarize_hash):
-  try:
-    entry = Entry_Post.query.filter_by(text2summarize_hash=text2summarize_hash).first()
-    if entry:
-      return True
-    else:
-      return False
-  except:
-    return False
-
-# function to return the Summary if the hash of text2summarize is already in the database
-def get_summary_from_hash(text2summarize_hash):
-  entry = Entry_Post.query.filter_by(text2summarize_hash=text2summarize_hash).first()
-  if entry:
-    if entry.openAIsummary == None:
-      return False
-    else:
-      return entry.openAIsummary
-  else:
-    return False
-
-# Function to write to the database
-def write_entry_to_db(posttype, url, text2summarizedb, openAIsummarydb):
-  try:
-      if not session.get('content_written', False):
-          text2summarize_hash = hashlib.sha256(text2summarizedb.encode('utf-8')).hexdigest()
-          entry = Entry_Post(posttype=posttype, url=url, text2summarize=text2summarizedb, openAIsummary=openAIsummarydb, text2summarize_hash=text2summarize_hash)
-          db.session.add(entry)
-          db.session.commit()
-          db.session.close()
-          session['content_written'] = True
-          return True
-  except Exception as e:  # Catch the exception
-      print("Error occurred. Could not write to database.")
-      print(f"Error details: {e}")  # Print the details of the error
-      return False
-
-# delete_entry_from_db(entry_id)
-def delete_entry_from_db(entry_id):
-  try:
-    entry = Entry_Post.query.filter_by(id=entry_id).first()
-    if entry:
-      db.session.delete(entry)
-      db.session.commit()
-      db.session.close()
-      return True
-    else:
-      return False
-  except:
-    return False
-  
-#given the text2summarize_hash, return the entire entry
-def get_entry_from_hash(text2summarize_hash):
-  try:
-    entry = Entry_Post.query.filter_by(text2summarize_hash=text2summarize_hash).first()
-    if entry:
-      return entry
-    else:
-      return False
-  except:
-    return False
-
-#Given the linkedin.get("me").json, sanitize, verify the JSON file and then save the user info to the database to oAuth table
-def write_user_to_db(user_info):
-  try:
-    user = oAuth.query.filter_by(email=user_info['emailAddress']).first()
-    if user:
-      return True
-    else:
-      user = oAuth(name=user_info['localizedFirstName'], email=user_info['emailAddress'], picture=user_info['profilePicture']['displayImage~']['elements'][0]['identifiers'][0]['identifier'])
-      db.session.add(user)
-      db.session.commit()
-      db.session.close()
-      return True
-  except:
-    return False
-
-#check if user exists in  database to oAuth table, if not create a new user and add to database
-def check_if_user_exists(user_info):   
-  try:
-    user = oAuth.query.filter_by(email=user_info['emailAddress']).first()
-    if user:
-      return True
-    else:
-      return False
-  except:
-    return False
 
 
 
