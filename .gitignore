@@ -144,3 +144,6 @@ sessions/
 
 #ignore the logs folder
 logs/
+
+#ignore migrations folder
+migrations/
