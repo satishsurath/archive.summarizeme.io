@@ -7,7 +7,7 @@ import nltk
 import hashlib
 from nltk.tokenize import sent_tokenize
 from app import app, db, login_manager, linkedin_bp
-from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, DeleteEntry, UploadPDFForm
+from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, UploadPDFForm
 from app.models import Entry_Post, oAuthUser, Entry_Posts_History
 from app.db_file_operations import write_json_to_file, write_content_to_file, read_from_file_json, read_from_file_content, check_folder_exists
 from app.db_file_operations import check_if_hash_exists, get_summary_from_hash, write_entry_to_db, delete_entry_from_db, get_entry_from_hash, write_user_to_db, check_if_user_exists
@@ -15,7 +15,7 @@ from app.utility_functions import num_tokens_from_string, avg_sentence_length, n
 from flask import render_template, flash, redirect, url_for, request, session
 from trafilatura import extract
 from trafilatura.settings import use_config
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy, Pagination
 from sqlalchemy import Table, Column, Float, Integer, String, MetaData, ForeignKey
 from flask_migrate import Migrate
 from flask_login import login_required, current_user, UserMixin
@@ -25,6 +25,7 @@ from werkzeug.utils import secure_filename
 from pdfminer.high_level import extract_text
 from io import BytesIO
 from flask_dance.contrib.linkedin import linkedin
+from collections.abc import Sequence
 
 
 
@@ -39,6 +40,28 @@ def inject_enumerate():
 @app.context_processor
 def inject_csrf_token():
     return dict(csrf_token=generate_csrf())
+
+class CustomPagination(Sequence):
+    def __init__(self, items, page, per_page, total):
+        self.items = items
+        self.page = page
+        self.per_page = per_page
+        self.total = total
+
+    def __len__(self):
+        return len(self.items)
+
+    def __getitem__(self, index):
+        return self.items[index]
+    
+    def iter_pages(self, left_edge=2, left_current=2, right_current=5, right_edge=2):
+        last = 0
+        for num in range(1, self.total // self.per_page + 1):
+            if num <= left_edge or (num > self.page - left_current - 1 and num < self.page + right_current) or num > self.total // self.per_page - right_edge:
+                if last + 1 != num:
+                    yield None
+                yield num
+                last = num    
 
 # -------------------- Basic Admin Authentication --------------------
 
@@ -236,8 +259,6 @@ def summarizeText():
         else:
           return render_template('summarizeText.html', title='Summarize Text', form=form, name=session['name'])
            
-
-
 @app.route('/summarizeURL', methods=['GET', 'POST'])
 def summarizeURL():
     #print("summarizeURL - 1")
@@ -554,7 +575,6 @@ def share(hash):
   else:
     return render_template('404.html'), 404
 
-
 # Routes for the login and logout pages
 @app.route('/admin-login', methods=['GET', 'POST'])
 def adminlogin():
@@ -573,15 +593,25 @@ def logout():
   session.clear()  # Clear session data
   return redirect(url_for('index'))
 
+#rewriting the logs to show user's entries if session.get('name', False) is True
 @app.route('/logs', methods=['GET', 'POST'])
-@login_required
 def logs():
-    form = DeleteEntry()
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 25, type=int)
-    entries = Entry_Post.query.order_by(Entry_Post.id.desc()).paginate(page=page, per_page=per_page)
-    return render_template('logs.html', entries=entries)   
 
+    if current_user.is_authenticated:
+        entries = Entry_Post.query.order_by(Entry_Post.id.desc()).paginate(page=page, per_page=per_page)
+    elif session.get('name', False):
+        user = oAuthUser.query.filter_by(name=session['name']).first()
+        if user:
+            entry_post_history = Entry_Posts_History.query.filter_by(oAuthUser_id=user.id).order_by(Entry_Posts_History.id.desc()).paginate(page=page, per_page=per_page)
+            entry_post_list = [entry.entry_post for entry in entry_post_history.items]
+            entries = CustomPagination(entry_post_list, entry_post_history.page, entry_post_history.per_page, entry_post_history.total)
+        else:
+            entries = None
+    else:
+        return redirect(url_for('adminlogin'))
+    return render_template('logs.html', entries=entries)
 
 # writing route for url_for('delete_entry', entry_id=entry.id) 
 @app.route('/delete_entry/<entry_id>', methods=['GET', 'POST'])

@@ -26,10 +26,5 @@ class openAI_debug_form(FlaskForm):
     openAI_debug_form_prompt = StringField('OpenAI Input:', widget=TextArea(), validators=[DataRequired()])
     submit = SubmitField('Submit')   
 
-#form to delete the entry
-class DeleteEntry(FlaskForm):
-    submit = SubmitField('Delete') 
-
-
 
 
