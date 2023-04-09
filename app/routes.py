@@ -9,6 +9,7 @@ from nltk.tokenize import sent_tokenize
 from app import app, db, login_manager
 from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, DeleteEntry, UploadPDFForm
 from app.models import Entry_Post, oAuthUser, Entry_Posts_oAuthUsers
+from app.db_operations import write_json_to_file, write_content_to_file, read_from_file_json, read_from_file_content, check_folder_exists
 from flask import render_template, flash, redirect, url_for, request, session
 from trafilatura import extract
 from trafilatura.settings import use_config
@@ -22,6 +23,7 @@ from werkzeug.utils import secure_filename
 from pdfminer.high_level import extract_text
 from io import BytesIO
 from flask_dance.contrib.linkedin import linkedin
+
 
 
 # -------------------- Utility functions --------------------
@@ -731,65 +733,7 @@ def check_if_user_exists(user_info):
   except:
     return False
 
-# -------------------- File Operations --------------------
 
-#given the filename and json contents, write to file and save it to os.path.join(app.config['UPLOAD_FOLDER'], filename)
-def write_json_to_file(filename, json_contents):
-  if (app.config['WRITE_JSON_LOCALLY'] == 'False'):
-    return True
-  else:
-  #wrap in try catch
-    try:
-      with open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'w') as f:
-        json.dump(json_contents, f)
-      return True
-    except:
-      return False
-    
-#given the filename and text2summarize contents, write to file and save it to os.path.join(app.config['UPLOAD_CONTENT'], filename)
-def write_content_to_file(filename, content):
-  if (app.config['WRITE_TEXT_LOCALLY'] == 'False'):
-    return True
-  else:
-    try:
-      with open(os.path.join(app.config['UPLOAD_CONTENT'], filename), 'w') as f:
-        f.write(content)
-      return True
-    except:
-      return False
-
-
-#Given the filename, read the file and return the json, wrap it in try catch
-def read_from_file_json(filename):
-  if (app.config['WRITE_JSON_LOCALLY'] == 'False'):
-    return False
-  else:
-    try:
-      with open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'r') as f:
-        json_contents = json.load(f)
-      return json_contents
-    except:
-      return False
-#Given the filename, read the file and return the contents, wrap it in try catch
-def read_from_file_content(filename):
-  if (app.config['WRITE_TEXT_LOCALLY'] == 'False'):
-    return False
-  else:
-    try:
-      with open(os.path.join(app.config['UPLOAD_CONTENT'], filename), 'r') as f:
-        content = f.read()
-      return content
-    except:
-      return False
-
-#check if folder os.path.join(app.config['UPLOAD_FOLDER'] exists, if not create it
-def check_folder_exists(folder_path):
-  try:
-    if not os.path.exists(folder_path):
-      os.makedirs(folder_path)
-    return True
-  except:
-    return False
 
 
 # -------------------- Helper functions  --------------------
