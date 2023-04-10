@@ -3,13 +3,13 @@
 {% if name: %}
     <p class="center-align">  
         Welcome, {{ name }}
-        <a href="{{ url_for('signout') }}" target="_blank"> 
+        <a href="{{ url_for('signout') }}"> 
             Signout
         </a>                        
     </p>
 {% else:  %}
     <p class="center-align">  
-        <a href="{{ url_for('signin') }}" target="_blank"> 
+        <a href="{{ url_for('signin') }}"> 
             Sign In with Linkedin
         </a>
         <details class="center-align">
