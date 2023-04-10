@@ -585,7 +585,10 @@ def adminlogin():
       user.id = username
       login_user(user)
       return redirect(url_for('logs'))
-  return render_template('adminlogin.html')
+  if not session.get('name', False):  
+    return render_template('adminlogin.html')
+  else:
+     return render_template('adminlogin.html', name=session['name'])
 
 @app.route('/logout')
 def logout():
