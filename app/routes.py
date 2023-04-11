@@ -17,6 +17,7 @@ from trafilatura import extract
 from trafilatura.settings import use_config
 from flask_sqlalchemy import SQLAlchemy, Pagination
 from sqlalchemy import Table, Column, Float, Integer, String, MetaData, ForeignKey
+from sqlalchemy.orm import joinedload
 from flask_migrate import Migrate
 from flask_login import login_required, current_user, UserMixin
 from flask_login import login_user, logout_user, login_required
@@ -603,7 +604,44 @@ def logs():
     per_page = request.args.get('per_page', 25, type=int)
 
     if current_user.is_authenticated:
-        entries = Entry_Post.query.order_by(Entry_Post.id.desc()).paginate(page=page, per_page=per_page)
+        entry_post_history = Entry_Posts_History.query \
+            .options(joinedload(Entry_Posts_History.entry_post)) \
+            .options(joinedload(Entry_Posts_History.oAuthUser)) \
+            .order_by(Entry_Posts_History.entry_post_id.desc())
+
+        all_entry_posts = Entry_Post.query.order_by(Entry_Post.id.desc()).all()
+
+        final_results = []
+
+        for entry_post in all_entry_posts:
+            entry_post_history_item = next((item for item in entry_post_history if item.entry_post_id == entry_post.id), None)
+            if entry_post_history_item:
+                final_results.append({
+                    'id': entry_post.id,
+                    'timestamp': entry_post.timestamp,
+                    'url': entry_post.url,
+                    'text2summarize': entry_post.text2summarize,
+                    'text2summarize_hash': entry_post.text2summarize_hash,
+                    'openAIsummary': entry_post.openAIsummary,
+                    'posttype': entry_post.posttype,
+                    'email': entry_post_history_item.oAuthUser.email,
+                    'name': entry_post_history_item.oAuthUser.name,
+                })
+            else:
+                final_results.append({
+                    'id': entry_post.id,
+                    'timestamp': entry_post.timestamp,
+                    'url': entry_post.url,
+                    'text2summarize': entry_post.text2summarize,
+                    'text2summarize_hash': entry_post.text2summarize_hash,
+                    'openAIsummary': entry_post.openAIsummary,
+                    'posttype': entry_post.posttype,
+                    'email': 'N/A',
+                    'name': 'N/A',
+                })
+
+        entries = CustomPagination(final_results, page, per_page, len(final_results))
+
     elif session.get('name', False):
         user = oAuthUser.query.filter_by(name=session['name']).first()
         if user:
@@ -614,10 +652,11 @@ def logs():
             entries = None
     else:
         return redirect(url_for('adminlogin'))
+
     if not session.get('name', False):
-      return render_template('logs.html', entries=entries, is_authenticated=current_user.is_authenticated)
+        return render_template('logs.html', entries=entries, is_authenticated=current_user.is_authenticated)
     else:
-      return render_template('logs.html', entries=entries, is_authenticated=current_user.is_authenticated, name=session['name'])
+        return render_template('logs.html', entries=entries, is_authenticated=current_user.is_authenticated, name=session['name'])
 
 
 # writing route for url_for('delete_entry', entry_id=entry.id) 
