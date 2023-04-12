@@ -53,8 +53,11 @@
     <div class="item">        
         {% if openAI_summary %}
             <div class="left-align">
+                    <details><summary>Suggested Title:</summary></details>
+                <h2> {{ summary_page_title }}</h2>
+                <hr>
                 <details>
-                    <summary><b>Text to Summarize:</b></summary>
+                    <summary><b>Original Extracted Text:</b></summary>
                     <p>
                         {% for para_text2summarize in text2summarize %}
                             {{para_text2summarize}}

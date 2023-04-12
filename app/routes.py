@@ -214,6 +214,8 @@ def summarizeText():
         token_count = num_tokens_from_string(text2summarize)
         avg_tokens_per_sentence = avg_sentence_length(text2summarize)
         #Check if the openAI_summary_JSON is not None
+        summary_page_title = openAI_page_title(session.get('openAI_summary'))
+        session['summary_page_title'] = summary_page_title
         if session['openAI_summary_JSON']:
             openAI_summary_str = json.dumps(session['openAI_summary_JSON'], indent=4)
         else:
@@ -233,7 +235,8 @@ def summarizeText():
               is_trimmed=session.get('is_trimmed', False),
               form_prompt_nerds=session['form_prompt'],
               number_of_chunks=session['number_of_chunks'],
-              text2summarize_hash=text2summarize_hash
+              text2summarize_hash=text2summarize_hash,
+              summary_page_title=summary_page_title
           )
         else:
           #If the user is logged in, then we need to show the email address
@@ -250,6 +253,7 @@ def summarizeText():
               form_prompt_nerds=session['form_prompt'],
               number_of_chunks=session['number_of_chunks'],
               text2summarize_hash=text2summarize_hash,
+              summary_page_title=summary_page_title,
               name=session['name']
           )           
     else:
@@ -359,24 +363,8 @@ def summarizeURL():
         #print("summarizeURL - 21")
         #If the user is not logged in, then we don't need to show the name
         session['content_display_URL'] = True
-        return render_template(
-          'summarizeURL.html',
-          title='Summarize Webpage',
-          form=form,
-          text2summarize=session['text2summarize_URL'].split('\n'),
-          openAI_summary=session['openAI_summary_URL'].split('\n'),
-          token_count=token_count,
-          avg_tokens_per_sentence=avg_tokens_per_sentence,
-          openAI_json=openAI_summary_str,
-          is_trimmed=session.get('is_trimmed', False),
-          form_prompt_nerds=session['form_prompt'],
-          number_of_chunks=session['number_of_chunks'],
-          text2summarize_hash=text2summarize_hash
-        )
-      else:
-        #print("summarizeURL - 22")
-        #if the user is logged in, then we need to show the name
-        session['content_display_URL'] = True
+        summary_page_title = openAI_page_title(session.get('openAI_summary_URL'))
+        session['summary_page_title'] = summary_page_title        
         return render_template(
           'summarizeURL.html',
           title='Summarize Webpage',
@@ -390,6 +378,28 @@ def summarizeURL():
           form_prompt_nerds=session['form_prompt'],
           number_of_chunks=session['number_of_chunks'],
           text2summarize_hash=text2summarize_hash,
+          summary_page_title=summary_page_title
+        )
+      else:
+        #print("summarizeURL - 22")
+        #if the user is logged in, then we need to show the name
+        session['content_display_URL'] = True
+        summary_page_title = openAI_page_title(session.get('openAI_summary'))
+        session['summary_page_title'] = summary_page_title        
+        return render_template(
+          'summarizeURL.html',
+          title='Summarize Webpage',
+          form=form,
+          text2summarize=session['text2summarize_URL'].split('\n'),
+          openAI_summary=session['openAI_summary_URL'].split('\n'),
+          token_count=token_count,
+          avg_tokens_per_sentence=avg_tokens_per_sentence,
+          openAI_json=openAI_summary_str,
+          is_trimmed=session.get('is_trimmed', False),
+          form_prompt_nerds=session['form_prompt'],
+          number_of_chunks=session['number_of_chunks'],
+          text2summarize_hash=text2summarize_hash,
+          summary_page_title=summary_page_title,
           name=session['name']
         )             
     else:
@@ -469,24 +479,10 @@ def summarizePDF():
                 token_count = num_tokens_from_string(text2summarize)
                 avg_tokens_per_sentence = avg_sentence_length(text2summarize)
                 openAI_summary_str = json.dumps(session['openAI_summary_JSON_PDF'], indent=4)
+                summary_page_title = openAI_page_title(session.get('openAI_summary_PDF'))
+                session['summary_page_title'] = summary_page_title  
                 if not session.get('name', False):
-                  # If we are not logged in, we don't want to show the Name
-                  return render_template(
-                      'summarizePDF.html',
-                      title='Summarize PDF',
-                      form=form,
-                      text2summarize=text2summarize.split('\n'),
-                      openAI_summary=session['openAI_summary_PDF'].split('\n'),
-                      token_count=token_count,
-                      avg_tokens_per_sentence=avg_tokens_per_sentence,
-                      openAI_json=openAI_summary_str,
-                      is_trimmed=session.get('is_trimmed', False),
-                      form_prompt_nerds=session['form_prompt'],
-                      number_of_chunks=session['form_prompt'],
-                      text2summarize_hash=text2summarize_hash
-                    )
-                else:
-                  # If we are logged in, we want to show the Name
+                  # If we are not logged in, we don't want to show the Name                
                   return render_template(
                       'summarizePDF.html',
                       title='Summarize PDF',
@@ -500,6 +496,24 @@ def summarizePDF():
                       form_prompt_nerds=session['form_prompt'],
                       number_of_chunks=session['form_prompt'],
                       text2summarize_hash=text2summarize_hash,
+                      summary_page_title=summary_page_title
+                    )
+                else:
+                  # If we are logged in, we want to show the Name                  #                   
+                  return render_template(
+                      'summarizePDF.html',
+                      title='Summarize PDF',
+                      form=form,
+                      text2summarize=text2summarize.split('\n'),
+                      openAI_summary=session['openAI_summary_PDF'].split('\n'),
+                      token_count=token_count,
+                      avg_tokens_per_sentence=avg_tokens_per_sentence,
+                      openAI_json=openAI_summary_str,
+                      is_trimmed=session.get('is_trimmed', False),
+                      form_prompt_nerds=session['form_prompt'],
+                      number_of_chunks=session['form_prompt'],
+                      text2summarize_hash=text2summarize_hash,
+                      summary_page_title=summary_page_title,
                       name=session['name']
                     )
             else:
@@ -816,7 +830,36 @@ def openAI_summarize_chunk(form_prompt):
         global_number_of_chunks = 1
         return response, is_trimmed, form_prompt, global_number_of_chunks
 
-
+#function that takes the text2summarize chunks it to make sure its within the max token limit and then openAI API to with a custom prompt
+def openAI_page_title(form_prompt):
+    global_prompt = "Given the summary of the Article, Suggest a Title. treat every thing below as the article summary: \n\n"
+    # Count tokens in the form_prompt
+    token_count = num_tokens_from_string(form_prompt)
+    max_tokens = 3500
+    # Trim the form_prompt if the token count exceeds the model's maximum limit
+    if token_count > max_tokens:
+        #print("prompt is too long, trimming...")
+        form_prompt_chunks = []
+        chunks = [sentence for sentence in sent_tokenize(form_prompt)]
+        title_prompt = ''
+        for sentence in chunks:
+            if num_tokens_from_string(title_prompt + sentence) < max_tokens:
+                title_prompt += sentence
+    else:
+       title_prompt = form_prompt
+        # The prompt is not too long (its within the max token limit), so we can just call the API
+    message = {"role": "user", "content": global_prompt + title_prompt}
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[message],
+        temperature=0.7,
+        max_tokens=500,
+        top_p=1.0,
+        frequency_penalty=0.0,
+        presence_penalty=1
+    )
+    openai_response = response["choices"][0]['message']['content']
+    return openai_response
 
 
 
@@ -842,3 +885,4 @@ def clear_session():
   session.pop('total_usage', None)
   session.pop('form_prompt_chunks', None)
   session.pop('form_prompt_chunk', None)
+  session.pop('title_prompt', None)
