@@ -8,7 +8,6 @@ flask_sqlalchemy==3.0.3
 Flask_WTF==1.1.1
 nltk==3.7
 openai==0.27.2
-pdfminer==20191125
 pdfminer.six==20221105
 python-dotenv==1.0.0
 SQLAlchemy==1.4.39
