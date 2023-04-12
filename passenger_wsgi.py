@@ -27,8 +27,8 @@ else:
 
 
 if sys.executable != INTERP:
-        print(f"INTERP: {INTERP}")
-        print(f"sys.argv: {sys.argv}")
+        print("INTERP: ",INTERP)
+        print("sys.argv: ",sys.argv)
         print("os.environ['HOME']:", os.environ['HOME'])
         os.execl(INTERP, INTERP, *sys.argv)
 sys.path.append(os.getcwd())
