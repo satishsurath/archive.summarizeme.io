@@ -494,7 +494,7 @@ def summarizePDF():
                       openAI_json=openAI_summary_str,
                       is_trimmed=session.get('is_trimmed', False),
                       form_prompt_nerds=session['form_prompt'],
-                      number_of_chunks=session['form_prompt'],
+                      number_of_chunks=session['number_of_chunks'],
                       text2summarize_hash=text2summarize_hash,
                       summary_page_title=summary_page_title
                     )
@@ -511,7 +511,7 @@ def summarizePDF():
                       openAI_json=openAI_summary_str,
                       is_trimmed=session.get('is_trimmed', False),
                       form_prompt_nerds=session['form_prompt'],
-                      number_of_chunks=session['form_prompt'],
+                      number_of_chunks=session['number_of_chunks'],
                       text2summarize_hash=text2summarize_hash,
                       summary_page_title=summary_page_title,
                       name=session['name']
@@ -539,7 +539,7 @@ def summarizePDF():
                   openAI_json=openAI_summary_str,
                   is_trimmed=session.get('is_trimmed', False),
                   form_prompt_nerds=session['form_prompt'],
-                  number_of_chunks=session['form_prompt'],
+                  number_of_chunks=session['number_of_chunks'],
                   text2summarize_hash=text2summarize_hash
                 )
               else:
@@ -555,7 +555,7 @@ def summarizePDF():
                   openAI_json=openAI_summary_str,
                   is_trimmed=session.get('is_trimmed', False),
                   form_prompt_nerds=session['form_prompt'],
-                  number_of_chunks=session['form_prompt'],
+                  number_of_chunks=session['number_of_chunks'],
                   text2summarize_hash=text2summarize_hash,
                   name=session['name']
                 )
