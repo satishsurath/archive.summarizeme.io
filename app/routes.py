@@ -384,7 +384,7 @@ def summarizeURL():
         #print("summarizeURL - 22")
         #if the user is logged in, then we need to show the name
         session['content_display_URL'] = True
-        summary_page_title = openAI_page_title(session.get('openAI_summary'))
+        summary_page_title = openAI_page_title(session.get('openAI_summary_URL'))
         session['summary_page_title'] = summary_page_title        
         return render_template(
           'summarizeURL.html',
