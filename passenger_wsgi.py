@@ -1,5 +1,6 @@
-import sys, os
+import os, sys
 
+INTERP = ""
 
 #If we are not in Productionl
 # Or Development Mode
