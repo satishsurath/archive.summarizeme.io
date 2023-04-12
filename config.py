@@ -32,3 +32,8 @@ class Config(object):
     SESSION_FILE_DIR = './sessions'
     SESSION_FILE_THRESHOLD = 100
     SESSION_PERMANENT = False
+    
+    # Configure Environment
+    SUMMARIZEME_ENV = os.environ.get('SUMMARIZEME_ENV') or 'development'
+        #Toggle to Show / Hide the Banner
+    FLAG_SUMMARIZEME_ENV = True

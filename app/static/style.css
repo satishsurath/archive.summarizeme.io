@@ -195,3 +195,17 @@ input[type="submit"]:hover {
     border: 0;
     border-top: 1px solid;
   }
+
+
+  .staging-banner {
+    background-color: #f44336;
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    font-weight: bold;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+  }

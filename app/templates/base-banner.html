@@ -1,0 +1,5 @@
+{% if config.FLAG_SUMMARIZEME_ENV %}
+  <div class="staging-banner" role="alert">
+    <strong>Environment:</strong> {{ config.SUMMARIZEME_ENV | safe }}
+  </div>
+{% endif %}
