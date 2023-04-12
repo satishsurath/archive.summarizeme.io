@@ -27,6 +27,8 @@ else:
 
 
 if sys.executable != INTERP:
+        print(f"INTERP: {INTERP}")
+        print(f"sys.argv: {sys.argv}")
         os.execl(INTERP, INTERP, *sys.argv)
 sys.path.append(os.getcwd())
 
