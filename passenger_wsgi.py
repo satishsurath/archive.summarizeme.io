@@ -1,8 +1,12 @@
 import sys, os
 INTERP = os.path.join(os.environ['HOME'], 'summarizeme.io', 'venv', 'bin', 'python3')
 
-#If we are not in Production - then it loads the Python Path from the .env file
-if os.environ['HOME'] != '/home/dh_hjy3j9':
+#If we are not in Production 
+# Or Development Mode
+# Or Staging Mode 
+# - then it loads the Python Path from the .env file
+
+if os.environ['HOME'] != '/home/dh_hjy3j9' or os.environ['HOME'] != '/home/dh_wagsu9/' or os.environ['HOME'] != '/home/dh_kzhw5x':
     from dotenv import load_dotenv
     load_dotenv()
     if (os.environ.get('INTERP')):
