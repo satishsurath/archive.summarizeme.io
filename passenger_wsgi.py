@@ -10,7 +10,7 @@ INTERP = ""
 if os.environ['HOME'] == '/home/dh_hjy3j9':
         INTERP = os.path.join(os.environ['HOME'], 'summarizeme.io', 'venv', 'bin', 'python3')
         print("1:"+INTERP)
-elif os.environ['HOME'] == '/home/dh_wagsu9/':
+elif os.environ['HOME'] == '/home/dh_wagsu9':
         INTERP = os.path.join(os.environ['HOME'], 'dev.summarizeme.io', 'venv', 'bin', 'python3')
         print("2:"+INTERP)
 elif os.environ['HOME'] == '/home/dh_kzhw5x':
@@ -29,7 +29,8 @@ else:
 if sys.executable != INTERP:
         print(f"INTERP: {INTERP}")
         print(f"sys.argv: {sys.argv}")
-        os.execl(INTERP, INTERP, *sys.argv)
+        print("os.environ['HOME']:", os.environ['HOME'])
+        #os.execl(INTERP, INTERP, *sys.argv)
 sys.path.append(os.getcwd())
 
 
