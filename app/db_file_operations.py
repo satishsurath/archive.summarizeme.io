@@ -70,16 +70,66 @@ def check_folder_exists(folder_path):
 
 # -------------------- Database Operations --------------------
 
+
+def get_entry_by_hash(text2summarize_hash):
+    try:
+        return Entry_Post.query.filter_by(text2summarize_hash=text2summarize_hash).first()
+    except Exception as e:
+        print(f"Error in get_entry_by_hash: {e}")
+        return None
+
+def get_user_by_email(email):
+    try:
+        return oAuthUser.query.filter_by(email=email).first()
+    except Exception as e:
+        print(f"Error in get_user_by_email: {e}")
+        return None
+
+def get_history_entry(entry_id, user_id):
+    try:
+        return Entry_Posts_History.query.filter_by(entry_post_id=entry_id, oAuthUser_id=user_id).first()
+    except Exception as e:
+        print(f"Error in get_history_entry: {e}")
+        return None
+
+def add_history_entry(entry_id, user_id):
+    try:
+        new_history_entry = Entry_Posts_History(entry_post_id=entry_id, oAuthUser_id=user_id)
+        db.session.add(new_history_entry)
+        db.session.commit()
+    except Exception as e:
+        print(f"Error in add_history_entry: {e}")
+
 # function to check if the hash of text2summarize is already in the database then retun
 def check_if_hash_exists(text2summarize_hash):
-  try:
-    entry = Entry_Post.query.filter_by(text2summarize_hash=text2summarize_hash).first()
-    if entry:
-      return True
-    else:
-      return False
-  except:
-    return False
+    entry = get_entry_by_hash(text2summarize_hash)
+    if not entry:
+        return False
+
+    if not session.get('name', False):
+        return True
+
+    user = get_user_by_email(session.get('email'))
+    if not user:
+        return True
+
+    history_entry = get_history_entry(entry.id, user.id)
+    if not history_entry:
+        add_history_entry(entry.id, user.id)
+
+    return True
+
+
+# 
+# def check_if_hash_exists(text2summarize_hash):
+#   try:
+#     entry = Entry_Post.query.filter_by(text2summarize_hash=text2summarize_hash).first()
+#     if entry:
+#       return True
+#     else:
+#       return False
+#   except:
+#     return False
 
 # function to return the Summary if the hash of text2summarize is already in the database
 def get_summary_from_hash(text2summarize_hash):

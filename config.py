@@ -36,4 +36,4 @@ class Config(object):
     # Configure Environment
     SUMMARIZEME_ENV = os.environ.get('SUMMARIZEME_ENV') or 'development'
         #Toggle to Show / Hide the Banner
-    FLAG_SUMMARIZEME_ENV = True
+    FLAG_SUMMARIZEME_ENV = os.environ.get('FLAG_SUMMARIZEME_ENV') or True

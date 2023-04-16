@@ -134,13 +134,6 @@ def before_request():
       session['name'] = name
       session['email'] = email
       session['linkedin_id'] = data['id']
-      #print(data['profilePicture'])
-      #session['profile_picture'] = data['profilePicture']['displayImage~']['elements'][0]['identifiers'][0]['identifier']
-      #print(session['profile_picture'])
-      print(session['linkedin_id'])
-      print(session['email'])
-      print(session['name'])
-      # Check if the user exists in the database
       if check_if_user_exists(session['email']) == False:
         write_user_to_db()
       else:
@@ -657,7 +650,7 @@ def logs():
         entries = CustomPagination(final_results, page, per_page, len(final_results))
 
     elif session.get('name', False):
-        user = oAuthUser.query.filter_by(name=session['name']).first()
+        user = oAuthUser.query.filter_by(linkedin_id=session['linkedin_id']).first()
         if user:
             entry_post_history = Entry_Posts_History.query.filter_by(oAuthUser_id=user.id).order_by(Entry_Posts_History.id.desc()).paginate(page=page, per_page=per_page)
             entry_post_list = [entry.entry_post for entry in entry_post_history.items]
