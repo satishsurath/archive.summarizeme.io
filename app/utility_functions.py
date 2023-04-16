@@ -93,7 +93,7 @@ def get_existing_short_url(long_url):
     data = response.json()
     print(data)
 
-    if data["message"] == "success":
+    if data["url_exists"]:
         return data["links"]["link_1"]["shorturl"]
     else:
         return None
