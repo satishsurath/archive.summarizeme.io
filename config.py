@@ -41,3 +41,6 @@ class Config(object):
     # Configure Matomo Analytics
     MATOMO_URL = os.environ.get('MATOMO_URL') or 'https://analytics.summarizeme.io/'
     MATOMO_SITE_ID = os.environ.get('MATOMO_SITE_ID') or 1
+    
+    # Configure YOURLS
+    YOURLS_SECRET_TOKEN = os.environ.get('YOURLS_SECRET_TOKEN')

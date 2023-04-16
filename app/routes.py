@@ -4,6 +4,7 @@ import json
 import trafilatura
 import tiktoken
 import nltk
+import time
 import hashlib
 from nltk.tokenize import sent_tokenize
 from app import app, db, login_manager, linkedin_bp
@@ -11,7 +12,7 @@ from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, Up
 from app.models import Entry_Post, oAuthUser, Entry_Posts_History
 from app.db_file_operations import write_json_to_file, write_content_to_file, read_from_file_json, read_from_file_content, check_folder_exists
 from app.db_file_operations import check_if_hash_exists, get_summary_from_hash, get_title_from_hash, write_entry_to_db, delete_entry_from_db, get_entry_from_hash, write_user_to_db, check_if_user_exists, get_entry_by_hash, get_user_by_email, get_history_entry, add_history_entry 
-from app.utility_functions import num_tokens_from_string, avg_sentence_length, nl2br, preferred_locale_value 
+from app.utility_functions import num_tokens_from_string, avg_sentence_length, nl2br, preferred_locale_value, get_short_url, get_existing_short_url 
 from flask import render_template, flash, redirect, url_for, request, session
 from trafilatura import extract
 from trafilatura.settings import use_config
@@ -586,24 +587,53 @@ def summarizePDF():
         return render_template('summarizePDF.html',title='Summarize PDF', form=form, name=session['name'])
     
 
+
+
 #given the hash of the text in the URL, we can retrieve the summary from the database
+# @app.route('/share/<hash>', methods=['GET', 'POST'])
+# def share(hash):
+#   #check if the hash exists in the Local Database, before calling the OpenAI API
+#   if check_if_hash_exists(hash):
+#     openAI_summary = get_summary_from_hash(hash)
+#     summary_page_title = get_title_from_hash(hash)
+#     #Support for Legacy Database entries without title
+#     if not summary_page_title:
+#         summary_page_title = openAI_page_title(openAI_summary)    
+#     return render_template(
+#       'share.html',
+#       openAI_summary=openAI_summary.split('\n'),
+#       summary_page_title=summary_page_title,
+#       hash=hash
+#     )
+#   else:
+#     return render_template('404.html'), 404
 @app.route('/share/<hash>', methods=['GET', 'POST'])
 def share(hash):
-  #check if the hash exists in the Local Database, before calling the OpenAI API
-  if check_if_hash_exists(hash):
-    openAI_summary = get_summary_from_hash(hash)
-    summary_page_title = get_title_from_hash(hash)
-    #Support for Legacy Database entries without title
-    if not summary_page_title:
-        summary_page_title = openAI_page_title(openAI_summary)    
-    return render_template(
-      'share.html',
-      openAI_summary=openAI_summary.split('\n'),
-      summary_page_title=summary_page_title,
-      hash=hash
-    )
-  else:
-    return render_template('404.html'), 404
+    #check if the hash exists in the Local Database, before calling the OpenAI API
+    if check_if_hash_exists(hash):
+        host = request.host
+        share_url = f"https://{host}/share/{hash}"
+        short_url = get_existing_short_url(share_url)
+        
+        if short_url is None:
+            short_url = get_short_url(hash, host)       
+        openAI_summary = get_summary_from_hash(hash)
+        summary_page_title = get_title_from_hash(hash)
+        #Support for Legacy Database entries without title
+        if not summary_page_title:
+            summary_page_title = openAI_page_title(openAI_summary)
+
+        #short_url = get_short_url(hash)
+
+        return render_template(
+            'share.html',
+            openAI_summary=openAI_summary.split('\n'),
+            summary_page_title=summary_page_title,
+            hash=hash,
+            short_url=short_url,
+        )
+    else:
+        return render_template('404.html'), 404
 
 # Routes for the login and logout pages
 @app.route('/admin-login', methods=['GET', 'POST'])
