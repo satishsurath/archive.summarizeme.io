@@ -67,6 +67,14 @@
           </td>
           <td class="left-align">
 
+
+            {% if entry.openAItitle %}   
+            <h3>
+             Suggested Title:  {{ entry.openAItitle }} 
+            </h3>
+            <hr>
+            {% endif %}
+
             {% if entry.posttype  == 1 %}   
 
                 <a href="{{ entry.url}}" target="_blank">
