@@ -1,5 +1,8 @@
 {% extends "base-share.html" %}
 {% block content %}
+<details class="left-align"><summary>Suggested Title:</summary></details>
+<h2 class="left-align"> {{ summary_page_title }}</h2>
+<hr>   
 <span style="line-height: 2em;" class="left-align">
 <b>Public Link:</b> <a href="{{ url_for('share', hash=hash) }}" target="_blank" style="text-decoration: none;">{{ url_for('share', hash=hash[:15]) }}...</a>  
 </span>

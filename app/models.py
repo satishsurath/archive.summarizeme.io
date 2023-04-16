@@ -10,6 +10,8 @@ class Entry_Post(db.Model):
     text2summarize = db.Column(db.String(214748364), index=True)
     text2summarize_hash = db.Column(db.String(64), index=True)  # Added new column for hash value
     openAIsummary = db.Column(db.String(214748), index=True)
+    openAItitle = db.Column(db.String(1024), index=True) # New column for OpenAI-generated title
+
 
     def __repr__(self):
         return '<Entry_Posts {}>'.format(self.id)

@@ -10,7 +10,7 @@ from app import app, db, login_manager, linkedin_bp
 from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, UploadPDFForm
 from app.models import Entry_Post, oAuthUser, Entry_Posts_History
 from app.db_file_operations import write_json_to_file, write_content_to_file, read_from_file_json, read_from_file_content, check_folder_exists
-from app.db_file_operations import check_if_hash_exists, get_summary_from_hash, write_entry_to_db, delete_entry_from_db, get_entry_from_hash, write_user_to_db, check_if_user_exists
+from app.db_file_operations import check_if_hash_exists, get_summary_from_hash, get_title_from_hash, write_entry_to_db, delete_entry_from_db, get_entry_from_hash, write_user_to_db, check_if_user_exists, get_entry_by_hash, get_user_by_email, get_history_entry, add_history_entry 
 from app.utility_functions import num_tokens_from_string, avg_sentence_length, nl2br, preferred_locale_value 
 from flask import render_template, flash, redirect, url_for, request, session
 from trafilatura import extract
@@ -166,6 +166,10 @@ def summarizeText():
         if check_if_hash_exists(text2summarize_hash):
             #Get the summary from the database
             openAI_summary = get_summary_from_hash(text2summarize_hash)
+            summary_page_title = get_title_from_hash(text2summarize_hash)
+            #Support for Legacy Database entries without title
+            if not summary_page_title:
+               summary_page_title = openAI_page_title(openAI_summary)
             openAI_summary_JSON = read_from_file_json(text2summarize_hash + ".json")
             session['is_trimmed'] = False
             session['form_prompt'] = text2summarize
@@ -174,6 +178,7 @@ def summarizeText():
             #Summarize the text using OpenAI API
             openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(text2summarize)
             openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
+            summary_page_title = openAI_page_title(session.get('openAI_summary'))
         # Now, we have all the data, Save the summary to the Session variables
         session['openAI_summary'] = openAI_summary
         session['openAI_summary_JSON'] = openAI_summary_JSON
@@ -181,6 +186,7 @@ def summarizeText():
         session['url'] = ""
         session['content_written'] = False
         session['content_display_Text'] = False
+        session['summary_page_title'] = summary_page_title              
         # Reload the page so we can process the template with all the Session Variables
         return redirect(url_for('summarizeText'))
     # Check if Session variables are set
@@ -196,7 +202,7 @@ def summarizeText():
         #Check if the text has already been written to Database or if it exists in the database
         if not check_if_hash_exists(text2summarize_hash) and not session.get('content_written', False):
             #Write the content to the database
-            write_entry_to_db(0, "0", text2summarize, session['openAI_summary'])
+            write_entry_to_db(0, "0", text2summarize, session['openAI_summary'], session.get('summary_page_title', "Error: Could not Generate Title"))
             #Write the json to the file
             write_json_to_file(text2summarize_hash + ".json", session['openAI_summary_JSON'])
             if check_folder_exists(app.config['UPLOAD_CONTENT']):
@@ -207,8 +213,8 @@ def summarizeText():
         token_count = num_tokens_from_string(text2summarize)
         avg_tokens_per_sentence = avg_sentence_length(text2summarize)
         #Check if the openAI_summary_JSON is not None
-        summary_page_title = openAI_page_title(session.get('openAI_summary'))
-        session['summary_page_title'] = summary_page_title
+        #summary_page_title = openAI_page_title(session.get('openAI_summary'))
+        #session['summary_page_title'] = summary_page_title
         if session['openAI_summary_JSON']:
             openAI_summary_str = json.dumps(session['openAI_summary_JSON'], indent=4)
         else:
@@ -229,7 +235,7 @@ def summarizeText():
               form_prompt_nerds=session['form_prompt'],
               number_of_chunks=session['number_of_chunks'],
               text2summarize_hash=text2summarize_hash,
-              summary_page_title=summary_page_title
+              summary_page_title=session.get('summary_page_title', "Error: Could not Generate Title")
           )
         else:
           #If the user is logged in, then we need to show the email address
@@ -246,7 +252,7 @@ def summarizeText():
               form_prompt_nerds=session['form_prompt'],
               number_of_chunks=session['number_of_chunks'],
               text2summarize_hash=text2summarize_hash,
-              summary_page_title=summary_page_title,
+              summary_page_title=session.get('summary_page_title', "Error: Could not Generate Title"),
               name=session['name']
           )           
     else:
@@ -291,6 +297,10 @@ def summarizeURL():
         #print("summarizeURL - 11")
         #Get the summary from the database
         openAI_summary = get_summary_from_hash(text2summarize_hash)
+        summary_page_title = get_title_from_hash(text2summarize_hash)
+        #Support for Legacy Database entries without title
+        if not summary_page_title:
+            summary_page_title = openAI_page_title(openAI_summary)        
         openAI_summary_JSON = read_from_file_json(text2summarize_hash+".json")
         session['is_trimmed'] = False
         session['form_prompt'] = text2summarize
@@ -300,6 +310,7 @@ def summarizeURL():
         #Summarize the URL using OpenAI API
         openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(text2summarize)
         openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
+        summary_page_title = openAI_page_title(openAI_summary)
         # Now, we have all the data, Save the summary to the Session variables
         #write_json_to_file(text2summarize_hash+".json",openAI_summary_JSON)
         #if check_folder_exists(app.config['UPLOAD_CONTENT']):
@@ -311,6 +322,8 @@ def summarizeURL():
       session['url'] = form.summarize.data
       session['content_written'] = False
       session['content_display_URL'] = False
+      
+      session['summary_page_title'] = summary_page_title            
       #print("summarizeURL - 12.2")  
       # Reload the page so we can process the template with all the Session Variables
       return redirect(url_for('summarizeURL'))
@@ -331,7 +344,7 @@ def summarizeURL():
       if not check_if_hash_exists(text2summarize_hash) and not session.get('content_written', False):
         #print("summarizeURL - 16")
         #Write the content to the database
-        write_entry_to_db(1, session['url'], text2summarize, session['openAI_summary_URL'])
+        write_entry_to_db(1, session['url'], text2summarize, session['openAI_summary_URL'],session.get('summary_page_title', "Error: Could not Generate Title"))
         #Write the json to the file
         write_json_to_file(text2summarize_hash + ".json", session['openAI_summary_URL_JSON'])
         #print("summarizeURL - 17")
@@ -355,9 +368,7 @@ def summarizeURL():
       if not session.get('name', False):
         #print("summarizeURL - 21")
         #If the user is not logged in, then we don't need to show the name
-        session['content_display_URL'] = True
-        summary_page_title = openAI_page_title(session.get('openAI_summary_URL'))
-        session['summary_page_title'] = summary_page_title        
+        session['content_display_URL'] = True   
         return render_template(
           'summarizeURL.html',
           title='Summarize Webpage',
@@ -371,14 +382,12 @@ def summarizeURL():
           form_prompt_nerds=session['form_prompt'],
           number_of_chunks=session['number_of_chunks'],
           text2summarize_hash=text2summarize_hash,
-          summary_page_title=summary_page_title
+          summary_page_title=session.get('summary_page_title', "Error: Could not Generate Title")
         )
       else:
         #print("summarizeURL - 22")
         #if the user is logged in, then we need to show the name
-        session['content_display_URL'] = True
-        summary_page_title = openAI_page_title(session.get('openAI_summary_URL'))
-        session['summary_page_title'] = summary_page_title        
+        session['content_display_URL'] = True  
         return render_template(
           'summarizeURL.html',
           title='Summarize Webpage',
@@ -392,7 +401,7 @@ def summarizeURL():
           form_prompt_nerds=session['form_prompt'],
           number_of_chunks=session['number_of_chunks'],
           text2summarize_hash=text2summarize_hash,
-          summary_page_title=summary_page_title,
+          summary_page_title=session.get('summary_page_title', "Error: Could not Generate Title"),
           name=session['name']
         )             
     else:
@@ -438,6 +447,10 @@ def summarizePDF():
                 print("summarizePDF - 7")
                 openAI_summary = get_summary_from_hash(text2summarize_hash)
                 openAI_summary_JSON = read_from_file_json(text2summarize_hash + ".json")
+                summary_page_title = get_title_from_hash(text2summarize_hash)
+                #Support for Legacy Database entries without title
+                if not summary_page_title:
+                  summary_page_title = openAI_page_title(openAI_summary)                
                 session['is_trimmed'] = False
                 session['form_prompt'] = text2summarize
                 session['number_of_chunks'] = "Retrieved from Database"
@@ -445,6 +458,7 @@ def summarizePDF():
                 print("summarizePDF - 8")
                 openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(text2summarize)
                 openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
+                summary_page_title = openAI_page_title(openAI_summary)
                 write_json_to_file(text2summarize_hash + ".json", openAI_summary_JSON)
                 if check_folder_exists(app.config['UPLOAD_CONTENT']):
                   write_content_to_file(text2summarize_hash + ".txt", text2summarize)
@@ -452,6 +466,7 @@ def summarizePDF():
             session['openAI_summary_PDF'] = openAI_summary
             session['openAI_summary_JSON_PDF'] = openAI_summary_JSON
             session['text2summarize_PDF'] = text2summarize
+            session['summary_page_title'] = summary_page_title  
             return redirect(url_for('summarizePDF'))
 
         # Now that we have the summary, we can render the page
@@ -466,7 +481,7 @@ def summarizePDF():
             # If we calculated the summary with OpenAI API, we need to write it to the database
             if not check_if_hash_exists(text2summarize_hash):
                 print("summarizePDF - 11")
-                write_entry_to_db(2, session['pdf_filename'], text2summarize, session['openAI_summary_PDF'])
+                write_entry_to_db(2, session['pdf_filename'], text2summarize, session['openAI_summary_PDF'],session.get('summary_page_title', "Error: Could not Generate Title"))
 
                 # Calculate token count and average tokens per sentence
                 token_count = num_tokens_from_string(text2summarize)
@@ -489,7 +504,7 @@ def summarizePDF():
                       form_prompt_nerds=session['form_prompt'],
                       number_of_chunks=session['number_of_chunks'],
                       text2summarize_hash=text2summarize_hash,
-                      summary_page_title=summary_page_title
+                      summary_page_title=session.get('summary_page_title', "Error: Could not Generate Title")
                     )
                 else:
                   # If we are logged in, we want to show the Name                  #                   
@@ -506,7 +521,7 @@ def summarizePDF():
                       form_prompt_nerds=session['form_prompt'],
                       number_of_chunks=session['number_of_chunks'],
                       text2summarize_hash=text2summarize_hash,
-                      summary_page_title=summary_page_title,
+                      summary_page_title=session.get('summary_page_title', "Error: Could not Generate Title"),
                       name=session['name']
                     )
             else:
@@ -533,7 +548,8 @@ def summarizePDF():
                   is_trimmed=session.get('is_trimmed', False),
                   form_prompt_nerds=session['form_prompt'],
                   number_of_chunks=session['number_of_chunks'],
-                  text2summarize_hash=text2summarize_hash
+                  text2summarize_hash=text2summarize_hash,
+                  summary_page_title=session.get('summary_page_title', "Error: Could not Generate Title")
                 )
               else:
                 # If we are logged in, we want to show the Name
@@ -550,6 +566,7 @@ def summarizePDF():
                   form_prompt_nerds=session['form_prompt'],
                   number_of_chunks=session['number_of_chunks'],
                   text2summarize_hash=text2summarize_hash,
+                  summary_page_title=session.get('summary_page_title', "Error: Could not Generate Title"),
                   name=session['name']
                 )
         else:
@@ -575,9 +592,14 @@ def share(hash):
   #check if the hash exists in the Local Database, before calling the OpenAI API
   if check_if_hash_exists(hash):
     openAI_summary = get_summary_from_hash(hash)
+    summary_page_title = get_title_from_hash(hash)
+    #Support for Legacy Database entries without title
+    if not summary_page_title:
+        summary_page_title = openAI_page_title(openAI_summary)    
     return render_template(
       'share.html',
       openAI_summary=openAI_summary.split('\n'),
+      summary_page_title=summary_page_title,
       hash=hash
     )
   else:
@@ -684,11 +706,16 @@ def view(hash):
     text2summarize = read_from_file_content(hash+".txt")
     openAI_json = read_from_file_json(hash+".json")
     openAI_json_str = json.dumps(openAI_json, indent=4)
+    summary_page_title = get_title_from_hash(hash)
+    #Support for Legacy Database entries without title
+    if not summary_page_title:
+        summary_page_title = openAI_page_title(openAI_summary)    
     return render_template(
       'view.html',
       openAI_summary=openAI_summary.split('\n'),
       text2summarize=text2summarize.split('\n'),
       openAI_json=openAI_json_str,
+      summary_page_title=summary_page_title,
       hash=hash
     )
   else:

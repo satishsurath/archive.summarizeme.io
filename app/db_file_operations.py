@@ -142,12 +142,25 @@ def get_summary_from_hash(text2summarize_hash):
   else:
     return False
 
+
+# function to return the Page Title if the hash of text2summarize is already in the database
+def get_title_from_hash(text2summarize_hash):
+  entry = Entry_Post.query.filter_by(text2summarize_hash=text2summarize_hash).first()
+  if entry:
+    if entry.openAItitle == None:
+      return False
+    else:
+      return entry.openAItitle
+  else:
+    return False
+
+
 # Function to write to the database
-def write_entry_to_db(posttype, url, text2summarizedb, openAIsummarydb):
+def write_entry_to_db(posttype, url, text2summarizedb, openAIsummarydb, openAItitledb):
     try:
         if not session.get('content_written', False):
             text2summarize_hash = hashlib.sha256(text2summarizedb.encode('utf-8')).hexdigest()
-            entry = Entry_Post(posttype=posttype, url=url, text2summarize=text2summarizedb, openAIsummary=openAIsummarydb, text2summarize_hash=text2summarize_hash)
+            entry = Entry_Post(posttype=posttype, url=url, text2summarize=text2summarizedb, openAIsummary=openAIsummarydb, text2summarize_hash=text2summarize_hash, openAItitle=openAItitledb)
             db.session.add(entry)
             db.session.commit()
 
@@ -203,6 +216,7 @@ def get_entry_from_hash(text2summarize_hash):
       return False
   except:
     return False
+    
 
 #Given the linkedin.get("me").json, sanitize, verify the JSON file and then save the user info to the database to oAuth table
 #check if user exists in  database to oAuth table, if not create a new user and add to database
