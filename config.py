@@ -37,3 +37,7 @@ class Config(object):
     SUMMARIZEME_ENV = os.environ.get('SUMMARIZEME_ENV') or 'development'
         #Toggle to Show / Hide the Banner
     FLAG_SUMMARIZEME_ENV = os.environ.get('FLAG_SUMMARIZEME_ENV') or True
+
+    # Configure Matomo Analytics
+    MATOMO_URL = os.environ.get('MATOMO_URL') or 'https://analytics.summarizeme.io/'
+    MATOMO_SITE_ID = os.environ.get('MATOMO_SITE_ID') or 1
