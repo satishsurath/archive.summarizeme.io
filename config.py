@@ -6,7 +6,9 @@ class Config(object):
     # Configure secret key
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
     # Configure database
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.sqlite3')
+    #SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.sqlite3')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Configure OAuth for LinkedIn
