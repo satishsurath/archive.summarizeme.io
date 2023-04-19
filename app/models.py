@@ -5,13 +5,12 @@ class Entry_Post(db.Model):
     __tablename__ = 'entry_post'
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    posttype = db.Column(db.Integer, index=True) # 0 means Summarize from Text, 1 means from URL; 2 for PDF File Upload
-    url = db.Column(db.String(2048), index=True) # "0" for Summarize from Text; 1 for URL string;
-    text2summarize = db.Column(db.String(214748364), index=True)
-    text2summarize_hash = db.Column(db.String(64), index=True)  # Added new column for hash value
-    openAIsummary = db.Column(db.String(214748), index=True)
-    openAItitle = db.Column(db.String(1024), index=True) # New column for OpenAI-generated title
-
+    posttype = db.Column(db.Integer, index=True)
+    url = db.Column(db.String(2048))
+    text2summarize = db.Column(db.Text)
+    text2summarize_hash = db.Column(db.String(64), unique=True)
+    openAIsummary = db.Column(db.Text)
+    openAItitle = db.Column(db.String(1024))
 
     def __repr__(self):
         return '<Entry_Posts {}>'.format(self.id)
