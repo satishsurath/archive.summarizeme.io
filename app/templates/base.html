@@ -99,6 +99,63 @@
         .slider.round:before {
           border-radius: 50%;
         }
+
+        /* For the Processing ... Animations */
+
+  /* For the Processing ... Animations */
+  .processing {
+    display: none;
+    font-weight: bold;
+    font-size: 24px;
+    padding: 15px;
+    border-radius: 5px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+  }
+
+  .processing:before {
+    content: 'Processing';
+    animation: animatedText 2s steps(4, end) infinite;
+  }
+
+  .processing:after {
+    content: '';
+    animation: animatedDots 2s steps(4, end) infinite;
+  }
+
+  @keyframes animatedText {
+    0% {
+      content: 'Processing';
+    }
+    100% {
+      content: 'Processing';
+    }
+  }
+
+  @keyframes animatedDots {
+    0% {
+      content: '.';
+    }
+    25% {
+      content: '..';
+    }
+    50% {
+      content: '...';
+    }
+    75% {
+      content: '';
+    }
+  }
+
+  /* Dark Mode support for the Processing text */
+  .dark-mode .processing {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #FFF;
+  }
+
     </style>
     <script>
 function setTheme(theme) {

@@ -20,7 +20,7 @@
             // submitButton.disabled = !acceptTermsCheckbox.checked;
         }
         </script>
-    <form action="" method="post" onsubmit="showProcessing()" novalidate>
+    <form action="" method="post" onsubmit="document.getElementById('processing').style.display = 'block'" novalidate>
         {{ form.hidden_tag() }}
         <p>
             {{ form.summarize.label }}<br>
@@ -37,10 +37,9 @@
         <br>
         <p>{{ form.submit(id='submit_button') }}</p>
         <br>
+        <div id="processing" class="processing"></div>
         {% include 'user_status.html' %}
-        <div id="processing" style="display:none; font-weight:bold;">
-            Processing <span id="dots"></span>
-        </div>
+        
     </form>
 </div>
 <div class="item">

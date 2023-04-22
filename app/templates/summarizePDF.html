@@ -19,7 +19,7 @@
     }
     </script>
     
-    <form method="POST" onsubmit="showProcessing()" enctype="multipart/form-data" novalidate>
+    <form method="POST" onsubmit="document.getElementById('processing').style.display = 'block'" enctype="multipart/form-data" novalidate>
         {{ form.hidden_tag() }}
         <p>
             {{ form.csrf_token }}
@@ -37,10 +37,9 @@
         <br>
         <p>{{ form.submit(id='submit_button') }}</p>
         <br>
+        <div id="processing" class="processing"></div>
         {% include 'user_status.html' %}
-        <div id="processing" style="display:none; font-weight:bold;">
-            Processing<span id="dots"></span>
-        </div>
+
     </form>
 </div>
 <div class="item">        
