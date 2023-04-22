@@ -13,13 +13,7 @@
             </div>
         {% endif %}
     {% endwith %}
-    <script>
-        function toggleSubmitButton() {
-            // const acceptTermsCheckbox = document.getElementById('accept_terms');
-            // const submitButton = document.getElementById('submit_button');
-            // submitButton.disabled = !acceptTermsCheckbox.checked;
-        }
-        </script>
+
     <form action="" method="post" onsubmit="document.getElementById('processing').style.display = 'block'" novalidate>
         {{ form.hidden_tag() }}
         <p>
@@ -29,7 +23,7 @@
             <span style="color: red;">[{{ error }}]</span>
             {% endfor %}
             <br>
-            {{ form.accept_terms(id='accept_terms', onclick="toggleSubmitButton()") }} I accept the <a href="/privacy-policy" target="_blank">Privacy Policy</a> and Terms of Use<br>
+            {{ form.accept_terms(id='accept_terms') }} I accept the <a href="/privacy-policy" target="_blank">Privacy Policy</a> and Terms of Use<br>
             {% for error in form.accept_terms.errors %}
             <span style="color: red;">[{{ error }}]</span>
             {% endfor %}                
