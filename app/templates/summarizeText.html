@@ -115,25 +115,5 @@
             </div>
         {% endif %}
 
-    <script>
-        var interval;
-        var dotCount = 0;
-
-        function showProcessing() {
-            document.getElementById('processing').style.display = 'block';
-            animateDots();
-        }
-
-        function animateDots() {
-            interval = setInterval(function() {
-                var dots = '';
-                for (var i = 0; i < dotCount; i++) {
-                    dots += '.';
-                }
-                document.getElementById('dots').innerText = dots;
-                dotCount = (dotCount + 1) % 4;
-            }, 500);
-        }
-    </script>
      
 {% endblock %}
