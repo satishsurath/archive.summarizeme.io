@@ -270,21 +270,21 @@ def summarizeYouTube():
     form = SummarizeFromYouTube()
     if form.validate_on_submit() and request.method == 'POST':
         video_id = extract_video_id(form.youtube_url.data)
-        print("1: video_id:" + video_id)
+        #print("1: video_id:" + video_id)
         if video_id is None:
             flash("Unable to extract video ID from the provided URL. Please try another URL.")
             return redirect(url_for('summarizeYouTube'))
         try:
             transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
             transcript_text = ' '.join([item['text'] for item in transcript_list])
-            print("2: transcript_text:" + transcript_text)
+            #print("2: transcript_text:" + transcript_text)
         except:
             flash("Unable to download transcript from the provided YouTube video. Please try another video.")
             return redirect(url_for('summarizeYouTube'))
 
         # Perform the summarization and other necessary tasks similar to the summarizeURL function
         text2summarize_hash = hashlib.sha256(transcript_text.encode('utf-8')).hexdigest()
-        print("3: text2summarize_hash:" + text2summarize_hash)
+        #print("3: text2summarize_hash:" + text2summarize_hash)
 
         #check if the hash exists in the Local Database, before calling the OpenAI API
         if check_if_hash_exists(text2summarize_hash):
@@ -312,9 +312,9 @@ def summarizeYouTube():
         session['content_written_YT'] = False
         session['content_display_YT'] = False
         session['summary_page_title'] = summary_page_title
-        print("4: summary_page_title:" + summary_page_title)
-        print("5: openAI_summary:" + openAI_summary)
-        print("6: openAI_summary_JSON:" + str(openAI_summary_JSON))
+        #print("4: summary_page_title:" + summary_page_title)
+        #print("5: openAI_summary:" + openAI_summary)
+        #print("6: openAI_summary_JSON:" + str(openAI_summary_JSON))
         #print("7: session['is_trimmed']:" + str(session['is_trimmed']))
         #print("8: session['form_prompt']:" + session['form_prompt'])
         #print("9: session['number_of_chunks']:" + session['number_of_chunks'])
