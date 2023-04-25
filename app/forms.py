@@ -16,6 +16,11 @@ class SummarizeFromURL(FlaskForm):
     accept_terms = BooleanField('I accept the Terms of Use and Privacy Policy', validators=[DataRequired()])
     submit = SubmitField('Summarize')
 
+class SummarizeFromYouTube(FlaskForm):
+    youtube_url = URLField('Paste / type the URL of the webpage:', validators=[DataRequired(), URL(message='Please enter a valid YouTube URL.')])
+    accept_terms = BooleanField('I accept the Terms of Use and Privacy Policy', validators=[DataRequired()])
+    submit = SubmitField('Summarize')
+
 class UploadPDFForm(FlaskForm):
     pdf = FileField('Upload PDF file:', validators=[FileRequired(), FileAllowed(['pdf'], 'PDF files only')])
     accept_terms = BooleanField('I accept the Terms of Use and Privacy Policy', validators=[DataRequired()])

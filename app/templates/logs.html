@@ -113,6 +113,20 @@
                 JSON
                 </a>
                 {% endif %}
+              {% elif entry.posttype  == 3 %}   
+
+              <a href="{{ entry.url}}" target="_blank">
+                YouTube: {{ entry.url[-12:] }}
+              </a>
+              
+                    {% if entry.text2summarize_hash %}   
+                    <br>
+                    <hr>
+        
+                    <a href="/static/uploads/{{ entry.text2summarize_hash}}.json" target="_blank">
+                    JSON
+                    </a>
+                    {% endif %}                
             {% endif %}
               <hr>
               <p style="text-align: left;" data-id='{{entry.id}}' class="card">

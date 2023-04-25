@@ -8,11 +8,11 @@ import time
 import hashlib
 from nltk.tokenize import sent_tokenize
 from app import app, db, login_manager, linkedin_bp
-from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, UploadPDFForm
+from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, UploadPDFForm, SummarizeFromYouTube
 from app.models import Entry_Post, oAuthUser, Entry_Posts_History
 from app.db_file_operations import write_json_to_file, write_content_to_file, read_from_file_json, read_from_file_content, check_folder_exists
 from app.db_file_operations import check_if_hash_exists, get_summary_from_hash, get_title_from_hash, write_entry_to_db, delete_entry_from_db, get_entry_from_hash, write_user_to_db, check_if_user_exists, get_entry_by_hash, get_user_by_email, get_history_entry, add_history_entry 
-from app.utility_functions import num_tokens_from_string, avg_sentence_length, nl2br, preferred_locale_value, get_short_url, get_existing_short_url 
+from app.utility_functions import num_tokens_from_string, avg_sentence_length, nl2br, preferred_locale_value, get_short_url, get_existing_short_url, extract_video_id 
 from flask import render_template, flash, redirect, url_for, request, session
 from trafilatura import extract
 from trafilatura.settings import use_config
@@ -28,7 +28,7 @@ from pdfminer.high_level import extract_text
 from io import BytesIO
 from flask_dance.contrib.linkedin import linkedin
 from collections.abc import Sequence
-
+from youtube_transcript_api import YouTubeTranscriptApi
 
 
 # -------------------- Utility functions --------------------
@@ -263,39 +263,154 @@ def summarizeText():
           return render_template('summarizeText.html', title='Summarize Text', form=form)
         else:
           return render_template('summarizeText.html', title='Summarize Text', form=form, name=session['name'])
-           
+
+#New funciton to summarize the youtube video transcript
+@app.route('/summarizeYouTube', methods=['GET', 'POST'])
+def summarizeYouTube():
+    form = SummarizeFromYouTube()
+    if form.validate_on_submit() and request.method == 'POST':
+        video_id = extract_video_id(form.youtube_url.data)
+        print("1: video_id:" + video_id)
+        if video_id is None:
+            flash("Unable to extract video ID from the provided URL. Please try another URL.")
+            return redirect(url_for('summarizeYouTube'))
+        try:
+            transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
+            transcript_text = ' '.join([item['text'] for item in transcript_list])
+            print("2: transcript_text:" + transcript_text)
+        except:
+            flash("Unable to download transcript from the provided YouTube video. Please try another video.")
+            return redirect(url_for('summarizeYouTube'))
+
+        # Perform the summarization and other necessary tasks similar to the summarizeURL function
+        text2summarize_hash = hashlib.sha256(transcript_text.encode('utf-8')).hexdigest()
+        print("3: text2summarize_hash:" + text2summarize_hash)
+
+        #check if the hash exists in the Local Database, before calling the OpenAI API
+        if check_if_hash_exists(text2summarize_hash):
+            openAI_summary = get_summary_from_hash(text2summarize_hash)
+            summary_page_title = get_title_from_hash(text2summarize_hash)
+            #Support for Legacy Database entries without title
+            if not summary_page_title:
+                summary_page_title = openAI_page_title(openAI_summary)
+            openAI_summary_JSON = read_from_file_json(text2summarize_hash + ".json")
+            session['is_trimmed'] = False
+            session['form_prompt'] = transcript_text
+            session['number_of_chunks'] = "Retrieved from Database"
+        else:
+          print("Calling OpenAI API")
+          openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(transcript_text)
+          print("openAI_summary_JSON:" + str(openAI_summary_JSON))
+          openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
+          print("openAI_summary:" + openAI_summary)
+          summary_page_title = openAI_page_title(openAI_summary)
+
+        session['openAI_summary_YT'] = openAI_summary
+        session['openAI_summary_YT_JSON'] = openAI_summary_JSON
+        session['text2summarize_YT'] = transcript_text
+        session['youtube_url'] = form.youtube_url.data
+        session['content_written_YT'] = False
+        session['content_display_YT'] = False
+        session['summary_page_title'] = summary_page_title
+        print("4: summary_page_title:" + summary_page_title)
+        print("5: openAI_summary:" + openAI_summary)
+        print("6: openAI_summary_JSON:" + str(openAI_summary_JSON))
+        #print("7: session['is_trimmed']:" + str(session['is_trimmed']))
+        #print("8: session['form_prompt']:" + session['form_prompt'])
+        #print("9: session['number_of_chunks']:" + session['number_of_chunks'])
+
+        return redirect(url_for('summarizeYouTube'))
+    # Check if Session variables are set and display the content
+    if session.get('openAI_summary_YT') and not session.get('content_display_YT', False):
+        text2summarize = session.get('text2summarize_YT')
+        text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
+        
+        #Check if the text has already been written to Database or if it exists in the database
+        if not check_if_hash_exists(text2summarize_hash) and not session.get('content_written_YT', False):
+            write_entry_to_db(3, session['youtube_url'], text2summarize, session['openAI_summary_YT'], session.get('summary_page_title', "Error: Could not Generate Title"))
+            write_json_to_file(text2summarize_hash + ".json", session['openAI_summary_YT_JSON'])
+
+            if check_folder_exists(app.config['UPLOAD_CONTENT']):
+                write_content_to_file(text2summarize_hash + ".txt", text2summarize)
+
+            session['content_written_YT'] = True
+
+        token_count = num_tokens_from_string(text2summarize)
+        avg_tokens_per_sentence = avg_sentence_length(text2summarize)
+
+        summary = session['openAI_summary_YT']
+        summary_page_title = session['summary_page_title']
+        session['content_display_YT'] = True
+        if session['openAI_summary_YT_JSON']:
+           openAI_summary_str= json.dumps(session['openAI_summary_YT_JSON'], indent=4, sort_keys=True)
+        else:
+           openAI_summary_str = "Retrieved from Database"
+
+        if not session.get('name', False):
+          return render_template(
+            'summarizeYoutube.html', 
+            form=form, 
+            text2summarize=session['text2summarize_YT'].split("\n"), 
+            openAI_summary=summary.split('\n'),
+            openAI_json=openAI_summary_str,
+            summary_page_title=summary_page_title, 
+            token_count=token_count, 
+            avg_tokens_per_sentence=avg_tokens_per_sentence,
+            is_trimmed=session.get('is_trimmed', False),
+            form_prompt_nerds=session['form_prompt'],
+            number_of_chunks=session['number_of_chunks'],
+            text2summarize_hash=text2summarize_hash
+          )
+        else:
+          return render_template(
+            'summarizeYoutube.html', 
+            form=form, 
+            text2summarize=session['text2summarize_YT'].split("\n"), 
+            openAI_summary=summary.split('\n'),
+            openAI_json=openAI_summary_str,
+            summary_page_title=summary_page_title, 
+            token_count=token_count, 
+            avg_tokens_per_sentence=avg_tokens_per_sentence,
+            is_trimmed=session.get('is_trimmed', False),
+            form_prompt_nerds=session['form_prompt'],
+            number_of_chunks=session['number_of_chunks'],
+            text2summarize_hash=text2summarize_hash,
+            name=session['name']
+          )
+
+    if not session.get('name', False):
+      return render_template('summarizeYoutube.html', form=form)
+    else:
+      return render_template('summarizeYoutube.html', form=form, name=session['name'])
+
+
+
 @app.route('/summarizeURL', methods=['GET', 'POST'])
 def summarizeURL():
-    #print("summarizeURL - 1")
     form = SummarizeFromURL()
-    #global openAI_summary, openAI_summary_JSON, text2summarize, url, global_is_trimmed, global_form_prompt, global_number_of_chunks, content_written
-    #if not session.get('content_written', False):
     if form.validate_on_submit() and request.method == 'POST':
-      #print("summarizeURL - 2")
       newconfig = use_config()
-      #print("summarizeURL - 3")
       newconfig.set("DEFAULT", "EXTRACTION_TIMEOUT", "0")
       downloaded = trafilatura.fetch_url(form.summarize.data)
-      #print("summarizeURL - 4")
       if downloaded is None:
-        #print("summarizeURL - 5")
+        
         flash("Unable to download content from the provided URL. Please try another URL.")
         return redirect(url_for('summarizeURL'))
-      #print("summarizeURL - 6")
+      
       session['url'] = form.summarize.data
-      #print("summarizeURL - 7")
+      
       text2summarize = extract(downloaded, config=newconfig)
-      #print("summarizeURL - 8")
+      
       if text2summarize is not None:
-        #print("summarizeURL - 9")
+        
         text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
       else:
-        #print("summarizeURL - 10")
+        
         flash("Unable to extract content from the provided URL. Please try another URL.")
         return redirect(url_for('summarizeURL'))
       #check if the hash exists in the Local Database, before calling the OpenAI API
       if check_if_hash_exists(text2summarize_hash):
-        #print("summarizeURL - 11")
+        
         #Get the summary from the database
         openAI_summary = get_summary_from_hash(text2summarize_hash)
         summary_page_title = get_title_from_hash(text2summarize_hash)
@@ -307,16 +422,13 @@ def summarizeURL():
         session['form_prompt'] = text2summarize
         session['number_of_chunks'] = "Retrieved from Database"
       else:
-        #print("summarizeURL - 12")
+        
         #Summarize the URL using OpenAI API
         openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(text2summarize)
         openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
         summary_page_title = openAI_page_title(openAI_summary)
         # Now, we have all the data, Save the summary to the Session variables
-        #write_json_to_file(text2summarize_hash+".json",openAI_summary_JSON)
-        #if check_folder_exists(app.config['UPLOAD_CONTENT']):
-        #  write_content_to_file(text2summarize_hash + ".txt", text2summarize)
-      #print("summarizeURL - 12.1")
+        
       session['openAI_summary_URL'] = openAI_summary
       session['openAI_summary_URL_JSON'] = openAI_summary_JSON
       session['text2summarize_URL'] = text2summarize
@@ -325,22 +437,24 @@ def summarizeURL():
       session['content_display_URL'] = False
       
       session['summary_page_title'] = summary_page_title            
-      #print("summarizeURL - 12.2")  
+        
       # Reload the page so we can process the template with all the Session Variables
       return redirect(url_for('summarizeURL'))
+    
     # Check if Session variables are set
     if session.get('openAI_summary_URL') and not session.get('content_display_URL', False):
-      #print("summarizeURL - 13")
       text2summarize = session.get('text2summarize_URL')
+     
       #Recheck if the text2summarize is not None
       if text2summarize is not None:
-        #print("summarizeURL - 14")
+        
         text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
       else:
         #print("summarizeURL - 15")
         #If the text2summarize is None, then we have an Error. Let the user know
         flash("Unable to extract content from the provided URL. Please try another URL.")
         return redirect(url_for('summarizeURL'))
+      
       #Check if the text has already been written to Database or if it exists in the database         
       if not check_if_hash_exists(text2summarize_hash) and not session.get('content_written', False):
         #print("summarizeURL - 16")
@@ -358,6 +472,8 @@ def summarizeURL():
       token_count = num_tokens_from_string(text2summarize)
       avg_tokens_per_sentence = avg_sentence_length(text2summarize)
       #check if the openAI_summary_JSON is not None
+     
+     
       if session['openAI_summary_URL_JSON']:
         #print("summarizeURL - 19")
         openAI_summary_str = json.dumps(session['openAI_summary_URL_JSON'], indent=4)

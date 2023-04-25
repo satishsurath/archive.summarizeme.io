@@ -4,6 +4,7 @@ import time
 import requests
 import time
 import hashlib
+import re
 from flask import request
 from app import app
 # -------------------- Utility functions --------------------
@@ -97,3 +98,10 @@ def get_existing_short_url(long_url):
         return data["links"]["link_1"]["shorturl"]
     else:
         return None
+# extract video id from youtube url
+def extract_video_id(url):
+    pattern = r'(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([\w-]{11})'
+    match = re.match(pattern, url)
+    if match:
+        return match.group(1)
+    return None
