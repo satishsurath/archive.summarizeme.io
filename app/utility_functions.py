@@ -100,7 +100,7 @@ def get_existing_short_url(long_url):
         return None
 # extract video id from youtube url
 def extract_video_id(url):
-    pattern = r'(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([\w-]{11})'
+    pattern = r'(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})'
     match = re.match(pattern, url)
     if match:
         return match.group(1)

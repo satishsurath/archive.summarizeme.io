@@ -298,11 +298,11 @@ def summarizeYouTube():
             session['form_prompt'] = transcript_text
             session['number_of_chunks'] = "Retrieved from Database"
         else:
-          print("Calling OpenAI API")
+          #print("Calling OpenAI API")
           openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(transcript_text)
-          print("openAI_summary_JSON:" + str(openAI_summary_JSON))
+          #print("openAI_summary_JSON:" + str(openAI_summary_JSON))
           openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
-          print("openAI_summary:" + openAI_summary)
+          #print("openAI_summary:" + openAI_summary)
           summary_page_title = openAI_page_title(openAI_summary)
 
         session['openAI_summary_YT'] = openAI_summary
