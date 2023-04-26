@@ -11,6 +11,11 @@ from app import app
 
 #This is the function that will be called to summarize the text
 def num_tokens_from_string(prompt):
+    prompt = str(prompt)  # Convert prompt into a string if it isn't already
+    
+    # Remove special characters - using re remove any non-ASCII characters from the input
+    # prompt = re.sub(r'[^\x00-\x7F]+', ' ', prompt)
+
     encoding = tiktoken.get_encoding("cl100k_base")
     num_tokens = len(encoding.encode(prompt))
     return num_tokens

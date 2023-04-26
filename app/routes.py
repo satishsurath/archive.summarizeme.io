@@ -179,7 +179,7 @@ def summarizeText():
             #Summarize the text using OpenAI API
             openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(text2summarize)
             openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
-            summary_page_title = openAI_page_title(session.get('openAI_summary'))
+            summary_page_title = openAI_page_title(openAI_summary)
         # Now, we have all the data, Save the summary to the Session variables
         session['openAI_summary'] = openAI_summary
         session['openAI_summary_JSON'] = openAI_summary_JSON
@@ -998,6 +998,10 @@ def openAI_summarize_chunk(form_prompt):
 
 #function that takes the text2summarize chunks it to make sure its within the max token limit and then openAI API to with a custom prompt
 def openAI_page_title(form_prompt):
+    #if form_prompt:
+    #  print("openAI_page_title:" + form_prompt)
+    #else:
+    #  print("openAI_page_title: form_prompt is empty")
     global_prompt = "Given the summary of the Article, Suggest a Title. treat every thing below as the article summary: \n\n"
     # Count tokens in the form_prompt
     token_count = num_tokens_from_string(form_prompt)
