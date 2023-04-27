@@ -704,25 +704,6 @@ def summarizePDF():
     
 
 
-
-#given the hash of the text in the URL, we can retrieve the summary from the database
-# @app.route('/share/<hash>', methods=['GET', 'POST'])
-# def share(hash):
-#   #check if the hash exists in the Local Database, before calling the OpenAI API
-#   if check_if_hash_exists(hash):
-#     openAI_summary = get_summary_from_hash(hash)
-#     summary_page_title = get_title_from_hash(hash)
-#     #Support for Legacy Database entries without title
-#     if not summary_page_title:
-#         summary_page_title = openAI_page_title(openAI_summary)    
-#     return render_template(
-#       'share.html',
-#       openAI_summary=openAI_summary.split('\n'),
-#       summary_page_title=summary_page_title,
-#       hash=hash
-#     )
-#   else:
-#     return render_template('404.html'), 404
 @app.route('/share/<hash>', methods=['GET', 'POST'])
 def share(hash):
     #check if the hash exists in the Local Database, before calling the OpenAI API
@@ -939,7 +920,8 @@ def openAI_summarize_chunk(form_prompt):
     global_prompt = "Summarize the below text into a few short bullet points in english. Treat everything below this sentence as text to be summarized: \n\n"
     # Count tokens in the form_prompt
     token_count = num_tokens_from_string(form_prompt)
-    max_tokens = 3500
+    # max_tokens = 3500 #original
+    max_tokens = 2400
     is_trimmed = False
     # Trim the form_prompt if the token count exceeds the model's maximum limit
     if token_count > max_tokens:
@@ -1005,7 +987,9 @@ def openAI_page_title(form_prompt):
     global_prompt = "Given the summary of the Article, Suggest a Title. treat every thing below as the article summary: \n\n"
     # Count tokens in the form_prompt
     token_count = num_tokens_from_string(form_prompt)
-    max_tokens = 3500
+    # max_tokens = 3500 #original
+    max_tokens = 2400
+    
     # Trim the form_prompt if the token count exceeds the model's maximum limit
     if token_count > max_tokens:
         #print("prompt is too long, trimming...")
