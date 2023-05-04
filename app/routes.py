@@ -357,8 +357,8 @@ def summarizeYouTube():
             token_count=token_count, 
             avg_tokens_per_sentence=avg_tokens_per_sentence,
             is_trimmed=session.get('is_trimmed', False),
-            form_prompt_nerds=session['form_prompt'],
-            number_of_chunks=session['number_of_chunks'],
+            form_prompt_nerds=session.get('form_prompt', False),
+            number_of_chunks=session.get('number_of_chunks', False),
             text2summarize_hash=text2summarize_hash
           )
         else:
@@ -372,8 +372,8 @@ def summarizeYouTube():
             token_count=token_count, 
             avg_tokens_per_sentence=avg_tokens_per_sentence,
             is_trimmed=session.get('is_trimmed', False),
-            form_prompt_nerds=session['form_prompt'],
-            number_of_chunks=session['number_of_chunks'],
+            form_prompt_nerds=session.get('form_prompt', False),
+            number_of_chunks=session.get('number_of_chunks', False),
             text2summarize_hash=text2summarize_hash,
             name=session['name']
           )
@@ -618,8 +618,8 @@ def summarizePDF():
                       avg_tokens_per_sentence=avg_tokens_per_sentence,
                       openAI_json=openAI_summary_str,
                       is_trimmed=session.get('is_trimmed', False),
-                      form_prompt_nerds=session['form_prompt'],
-                      number_of_chunks=session['number_of_chunks'],
+                      form_prompt_nerds=session.get('form_prompt', False),
+                      number_of_chunks=session.get('number_of_chunks', False),
                       text2summarize_hash=text2summarize_hash,
                       summary_page_title=session.get('summary_page_title', "Error: Could not Generate Title")
                     )
@@ -635,8 +635,8 @@ def summarizePDF():
                       avg_tokens_per_sentence=avg_tokens_per_sentence,
                       openAI_json=openAI_summary_str,
                       is_trimmed=session.get('is_trimmed', False),
-                      form_prompt_nerds=session['form_prompt'],
-                      number_of_chunks=session['number_of_chunks'],
+                      form_prompt_nerds=session.get('form_prompt', False),
+                      number_of_chunks=session.get('number_of_chunks', False),
                       text2summarize_hash=text2summarize_hash,
                       summary_page_title=session.get('summary_page_title', "Error: Could not Generate Title"),
                       name=session['name']
@@ -663,8 +663,8 @@ def summarizePDF():
                   avg_tokens_per_sentence=avg_tokens_per_sentence,
                   openAI_json=openAI_summary_str,
                   is_trimmed=session.get('is_trimmed', False),
-                  form_prompt_nerds=session['form_prompt'],
-                  number_of_chunks=session['number_of_chunks'],
+                  form_prompt_nerds=session.get('form_prompt', False),
+                  number_of_chunks=session.get('number_of_chunks', False),
                   text2summarize_hash=text2summarize_hash,
                   summary_page_title=session.get('summary_page_title', "Error: Could not Generate Title")
                 )
@@ -680,8 +680,8 @@ def summarizePDF():
                   avg_tokens_per_sentence=avg_tokens_per_sentence,
                   openAI_json=openAI_summary_str,
                   is_trimmed=session.get('is_trimmed', False),
-                  form_prompt_nerds=session['form_prompt'],
-                  number_of_chunks=session['number_of_chunks'],
+                  form_prompt_nerds=session.get('form_prompt', False),
+                  number_of_chunks=session.get('number_of_chunks', False),
                   text2summarize_hash=text2summarize_hash,
                   summary_page_title=session.get('summary_page_title', "Error: Could not Generate Title"),
                   name=session['name']
