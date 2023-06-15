@@ -944,7 +944,7 @@ def openAI_summarize_chunk(form_prompt):
         for chunk in form_prompt_chunks:
             message = {"role": "user", "content": global_prompt + chunk}
             response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+                model="gpt-3.5-turbo-16k",
                 messages=[message],
                 temperature=0.7,
                 max_tokens=500,
@@ -967,7 +967,7 @@ def openAI_summarize_chunk(form_prompt):
         # print("prompt is not trimmed")
         message = {"role": "user", "content": global_prompt + form_prompt}
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-3.5-turbo-16k",
             messages=[message],
             temperature=0.7,
             max_tokens=500,
