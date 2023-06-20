@@ -916,68 +916,6 @@ def openAI_summarize_debug(form_openai_key, form_prompt):
     print(json.dumps(response, indent=4)) 
     return response
 
-# # Functions to call the OpenAI API
-# def openAI_summarize_chunk(form_prompt):
-#     global_prompt = "Summarize the below text into a few short bullet points in english. Treat everything below this sentence as text to be summarized: \n\n"
-#     # Count tokens in the form_prompt
-#     token_count = num_tokens_from_string(form_prompt)
-#     # max_tokens = 3500 #original
-#     max_tokens = 2400
-#     is_trimmed = False
-#     # Trim the form_prompt if the token count exceeds the model's maximum limit
-#     if token_count > max_tokens:
-#         #print("prompt is too long, trimming...")
-#         form_prompt_chunks = []
-#         chunks = [sentence for sentence in sent_tokenize(form_prompt)]
-#         temp_prompt = ''
-#         for sentence in chunks:
-#             if num_tokens_from_string(temp_prompt + sentence) < max_tokens:
-#                 temp_prompt += sentence
-#             else:
-#                 form_prompt_chunks.append(temp_prompt.strip())
-#                 temp_prompt = sentence
-#         if temp_prompt != '':
-#             form_prompt_chunks.append(temp_prompt.strip())
-#         is_trimmed = True
-#         completed_messages = []
-#         openai_responses = []
-#         total_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
-#         for chunk in form_prompt_chunks:
-#             message = {"role": "user", "content": global_prompt + chunk}
-#             response = openai.ChatCompletion.create(
-#                 model="gpt-3.5-turbo-16k",
-#                 messages=[message],
-#                 temperature=0.7,
-#                 max_tokens=500,
-#                 top_p=1.0,
-#                 frequency_penalty=0.0,
-#                 presence_penalty=1
-#             )
-#             completed_messages.extend(response["choices"][0]['message']['content'].split('\n')[:-1])
-#             openai_responses.append(response)
-#             for key in total_usage:
-#                 total_usage[key] += response["usage"][key]
-#         completed_messages.append(response["choices"][0]['message']['content'].split('\n')[-1])
-#         openai_response = openai_responses[-1].copy()
-#         openai_response["choices"] = [{"message": {"content": '\n'.join(completed_messages)}}]
-#         openai_response["usage"] = total_usage
-#         global_number_of_chunks = len(form_prompt_chunks)
-#         return openai_response, is_trimmed, form_prompt, global_number_of_chunks
-#     else:
-#         # The prompt is not too long (its within the max token limit), so we can just call the API
-#         # print("prompt is not trimmed")
-#         message = {"role": "user", "content": global_prompt + form_prompt}
-#         response = openai.ChatCompletion.create(
-#             model="gpt-3.5-turbo-16k",
-#             messages=[message],
-#             temperature=0.7,
-#             max_tokens=500,
-#             top_p=1.0,
-#             frequency_penalty=0.0,
-#             presence_penalty=1
-#         )
-#         global_number_of_chunks = 1
-#         return response, is_trimmed, form_prompt, global_number_of_chunks
 
 #function that takes the text2summarize chunks it to make sure its within the max token limit and then openAI API to with a custom prompt
 def openAI_page_title(form_prompt):
