@@ -137,6 +137,7 @@
                     {% endif %}                
             {% endif %}
               <hr>
+              <div id="summary-content">
               <p style="text-align: left;" data-id='{{entry.id}}' class="card">
                 {% if entry.text2summarize %}
                 {{ entry.text2summarize[:20] }}
@@ -151,7 +152,7 @@
               {% endif %}
                 <button onclick='myFunction({{ entry.id }})' class="myBtn">Read more</button>
               </p>
-              
+            </div>
               <hr>
 
             <p style="text-align: left;" data-id='{{entry.id}}' class="card2">
