@@ -158,6 +158,17 @@
 
     </style>
     <script>
+function copySummaryToClipboard() {
+    const textarea = document.createElement('textarea');
+    textarea.textContent = document.querySelector('#summary-content').textContent;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    alert('Summary copied to clipboard!');
+}
+
+
 function setTheme(theme) {
     const root = document.documentElement;
     const body = document.body;
