@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <h1>Key Insights From URL</h1>
+    
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flashes">
+                {% for message in messages %}
+                    <div class="alert alert-warning" role="alert">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <form action="" method="post" onsubmit="document.getElementById('processing').style.display = 'block'" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.summarize.label }}<br>
+            {{ form.summarize(class_='form-control',placeholder='Enter webpage URL...', style='width: 300px;') }}<br>
+            {% for error in form.summarize.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}
+            <br>
+            {{ form.accept_terms(id='accept_terms') }} I accept the <a href="/privacy-policy" target="_blank">Privacy Policy</a> and Terms of Use<br>
+            {% for error in form.accept_terms.errors %}
+            <span style="color: red;">[{{ error }}]</span>
+            {% endfor %}                
+        </p>
+        <br>
+        <p>{{ form.submit(id='submit_button') }}</p>
+        <br>
+        <div id="processing" class="processing"></div>
+        {% include 'user_status.html' %}
+        
+    </form>
+</div>
+<div class="item">
+
+        {% if openAI_summary %}
+        <div class="left-align">
+            <details><summary>Suggested Title:</summary></details>
+            <h2> {{ summary_page_title }}</h2>
+
+            <hr>
+            <h2>Key Insights:</h2>
+            <div id="summary-content">
+            <p>
+                {% for para_summary in openAI_summary %}
+                    {{para_summary}}<br>
+                {% endfor %}
+            </p>
+        </div>
+            <hr>
+            {% include 'reuse-copy-share.html' %}
+            <hr>
+            <details>
+                <summary>Stats for Nerds</summary>
+                <p><strong>Token count:</strong> {{ token_count }}</p>
+                <p><strong>Chunks count:</strong> {{ number_of_chunks }}</p>
+                <p><strong>Average tokens per sentence:</strong> {{ avg_tokens_per_sentence|round(2) }}</p>
+                {% if is_trimmed %}
+                    <p> The Text has been trimed for exceeding the max token count. Check below for the trimmed prompt</p>
+                {% else %}
+                    <p> The Text has NOT been trimed</p>
+                {% endif %}
+            </details>
+            {% if is_trimmed %}
+                <details>
+                    <summary>Trimmed Prompt</summary>
+                    <p> {{ form_prompt_nerds }}</p>
+                </details>
+            {% endif %}
+            <details>
+                <summary>JSON:</summary>
+                <pre style="white-space: pre-wrap;" class="prettyprint">{{ openAI_json|nl2br|safe }}</pre>
+            </details>
+        </div>
+        {% include 'reuse-original-text.html' %}
+        {% endif %}
+
+{% endblock %}
