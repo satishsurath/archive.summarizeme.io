@@ -814,7 +814,7 @@ def keyInsightsText():
           return render_template('keyInsightsText.html', title='keyInsights Text', form=form, name=session['name'])
 
 #New funciton to summarize the youtube video transcript
-@app.route('/keyInsightseYouTube', methods=['GET', 'POST'])
+@app.route('/keyInsightsYouTube', methods=['GET', 'POST'])
 def keyInsightsYouTube():
     form = SummarizeFromYouTube()
     if form.validate_on_submit() and request.method == 'POST':
@@ -822,14 +822,14 @@ def keyInsightsYouTube():
         #print("1: video_id:" + video_id)
         if video_id is None:
             flash("Unable to extract video ID from the provided URL. Please try another URL.")
-            return redirect(url_for('keyInsightseYouTube'))
+            return redirect(url_for('keyInsightsYouTube'))
         try:
             transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
             transcript_text = ' '.join([item['text'] for item in transcript_list])
             #print("2: transcript_text:" + transcript_text)
         except:
             flash("Unable to download transcript from the provided YouTube video. Please try another video.")
-            return redirect(url_for('keyInsightseYouTube'))
+            return redirect(url_for('keyInsightsYouTube'))
 
         # Perform the summarization and other necessary tasks similar to the summarizeURL function
         text2summarize_hash = hashlib.sha256(transcript_text.encode('utf-8')).hexdigest()
@@ -868,7 +868,7 @@ def keyInsightsYouTube():
         #print("8: session['form_prompt']:" + session['form_prompt'])
         #print("9: session['number_of_chunks']:" + session['number_of_chunks'])
 
-        return redirect(url_for('keyInsightseYouTube'))
+        return redirect(url_for('keyInsightsYouTube'))
     # Check if Session variables are set and display the content
     if session.get('openAI_summary_YT') and not session.get('content_display_YT', False):
         text2summarize = session.get('text2summarize_YT')
