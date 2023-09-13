@@ -12,7 +12,7 @@ from app import app, db, login_manager, linkedin_bp
 from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, UploadPDFForm, SummarizeFromYouTube
 from app.models import Entry_Post, oAuthUser, Entry_Posts_History
 from app.db_file_operations import write_json_to_file, write_content_to_file, read_from_file_json, read_from_file_content, check_folder_exists
-from app.db_file_operations import check_if_hash_exists, get_summary_from_hash, get_title_from_hash, write_entry_to_db, delete_entry_from_db, get_entry_from_hash, write_user_to_db, check_if_user_exists, get_entry_by_hash, get_user_by_email, get_history_entry, add_history_entry 
+from app.db_file_operations import check_if_hash_exists, get_summary_from_hash, get_key_insights_from_hash, get_title_from_hash, write_entry_to_db, write_insights_to_db, delete_entry_from_db, get_entry_from_hash, write_user_to_db, check_if_user_exists, get_entry_by_hash, get_user_by_email, get_history_entry, add_history_entry 
 from app.utility_functions import num_tokens_from_string, avg_sentence_length, nl2br, preferred_locale_value, get_short_url, get_existing_short_url, extract_video_id 
 from flask import render_template, flash, redirect, url_for, request, session
 from trafilatura import extract
@@ -598,7 +598,13 @@ def summarizePDF():
             if not check_if_hash_exists(text2summarize_hash):
                 print("summarizePDF - 11")
                 write_entry_to_db(2, session['pdf_filename'], text2summarize, session['openAI_summary_PDF'],session.get('summary_page_title', "Error: Could not Generate Title"))
-
+                #Write the json to the file
+                write_json_to_file(text2summarize_hash + ".json", session['openAI_summary_JSON_PDF'])
+                #print("summarizeURL - 17")
+                if check_folder_exists(app.config['UPLOAD_CONTENT']):
+                  #print("summarizeURL - 18")
+                  #Write the content to the file
+                  write_content_to_file(text2summarize_hash + ".txt", text2summarize)
                 # Calculate token count and average tokens per sentence
                 token_count = num_tokens_from_string(text2summarize)
                 avg_tokens_per_sentence = avg_sentence_length(text2summarize)
@@ -713,14 +719,14 @@ def keyInsightsText():
         text2summarize = form.summarize.data
         text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
         #Check if the text has already been summarized
-        if check_if_hash_exists(text2summarize_hash):
+        if get_key_insights_from_hash(text2summarize_hash):
             #Get the summary from the database
-            openAI_summary = get_summary_from_hash(text2summarize_hash)
+            openAI_summary = get_key_insights_from_hash(text2summarize_hash) #get_summary_from_hash
             summary_page_title = get_title_from_hash(text2summarize_hash)
             #Support for Legacy Database entries without title
             if not summary_page_title:
                summary_page_title = openAI_page_title(openAI_summary)
-            openAI_summary_JSON = read_from_file_json(text2summarize_hash + ".json")
+            openAI_summary_JSON = read_from_file_json(text2summarize_hash + "_insights.json")
             session['is_trimmed'] = False
             session['form_prompt'] = text2summarize
             session['number_of_chunks'] = "Retrieved from Database"
@@ -741,7 +747,7 @@ def keyInsightsText():
         return redirect(url_for('keyInsightsText'))
     # Check if Session variables are set
     if session.get('openAI_summary') and not session.get('content_display_Text', False):
-        text2summarize = session.get('keyInsightsText')
+        text2summarize = session.get('text2summarize')
         #Recheck if the text2summarize is not None
         if text2summarize is not None:
             text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
@@ -750,11 +756,11 @@ def keyInsightsText():
             flash("Unable to extract content from the provided Text. Please try Again")
             return redirect(url_for('keyInsightsText'))
         #Check if the text has already been written to Database or if it exists in the database
-        if not check_if_hash_exists(text2summarize_hash) and not session.get('content_written', False):
+        if not get_key_insights_from_hash(text2summarize_hash) and not session.get('content_written', False):
             #Write the content to the database
-            write_entry_to_db(0, "0", text2summarize, session['openAI_summary'], session.get('summary_page_title', "Error: Could not Generate Title"))
+            write_insights_to_db(4, "0", text2summarize, session['openAI_summary'], session.get('summary_page_title', "Error: Could not Generate Title"))
             #Write the json to the file
-            write_json_to_file(text2summarize_hash + ".json", session['openAI_summary_JSON'])
+            write_json_to_file(text2summarize_hash + "_insights.json", session['openAI_summary_JSON'])
             if check_folder_exists(app.config['UPLOAD_CONTENT']):
                 #Write the content to the file
                 write_content_to_file(text2summarize_hash + ".txt", text2summarize)
@@ -836,13 +842,13 @@ def keyInsightsYouTube():
         #print("3: text2summarize_hash:" + text2summarize_hash)
 
         #check if the hash exists in the Local Database, before calling the OpenAI API
-        if check_if_hash_exists(text2summarize_hash):
-            openAI_summary = get_summary_from_hash(text2summarize_hash)
+        if get_key_insights_from_hash(text2summarize_hash):
+            openAI_summary = get_key_insights_from_hash(text2summarize_hash)
             summary_page_title = get_title_from_hash(text2summarize_hash)
             #Support for Legacy Database entries without title
             if not summary_page_title:
                 summary_page_title = openAI_page_title(openAI_summary)
-            openAI_summary_JSON = read_from_file_json(text2summarize_hash + ".json")
+            openAI_summary_JSON = read_from_file_json(text2summarize_hash + "_insights.json")
             session['is_trimmed'] = False
             session['form_prompt'] = transcript_text
             session['number_of_chunks'] = "Retrieved from Database"
@@ -875,9 +881,9 @@ def keyInsightsYouTube():
         text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
         
         #Check if the text has already been written to Database or if it exists in the database
-        if not check_if_hash_exists(text2summarize_hash) and not session.get('content_written_YT', False):
-            write_entry_to_db(3, session['youtube_url'], text2summarize, session['openAI_summary_YT'], session.get('summary_page_title', "Error: Could not Generate Title"))
-            write_json_to_file(text2summarize_hash + ".json", session['openAI_summary_YT_JSON'])
+        if not get_key_insights_from_hash(text2summarize_hash) and not session.get('content_written_YT', False):
+            write_insights_to_db(7, session['youtube_url'], text2summarize, session['openAI_summary_YT'], session.get('summary_page_title', "Error: Could not Generate Title"))
+            write_json_to_file(text2summarize_hash + "_insights.json", session['openAI_summary_YT_JSON'])
 
             if check_folder_exists(app.config['UPLOAD_CONTENT']):
                 write_content_to_file(text2summarize_hash + ".txt", text2summarize)
@@ -956,15 +962,15 @@ def keyInsightsURL():
         flash("Unable to extract content from the provided URL. Please try another URL.")
         return redirect(url_for('keyInsightsURL'))
       #check if the hash exists in the Local Database, before calling the OpenAI API
-      if check_if_hash_exists(text2summarize_hash):
+      if get_key_insights_from_hash(text2summarize_hash):
         
         #Get the summary from the database
-        openAI_summary = get_summary_from_hash(text2summarize_hash)
+        openAI_summary = get_key_insights_from_hash(text2summarize_hash)
         summary_page_title = get_title_from_hash(text2summarize_hash)
         #Support for Legacy Database entries without title
         if not summary_page_title:
             summary_page_title = openAI_page_title(openAI_summary)        
-        openAI_summary_JSON = read_from_file_json(text2summarize_hash+".json")
+        openAI_summary_JSON = read_from_file_json(text2summarize_hash+"_insights.json")
         session['is_trimmed'] = False
         session['form_prompt'] = text2summarize
         session['number_of_chunks'] = "Retrieved from Database"
@@ -1003,12 +1009,12 @@ def keyInsightsURL():
         return redirect(url_for('summarizeURL'))
       
       #Check if the text has already been written to Database or if it exists in the database         
-      if not check_if_hash_exists(text2summarize_hash) and not session.get('content_written', False):
+      if not get_key_insights_from_hash(text2summarize_hash) and not session.get('content_written', False):
         #print("summarizeURL - 16")
         #Write the content to the database
-        write_entry_to_db(1, session['url'], text2summarize, session['openAI_summary_URL'],session.get('summary_page_title', "Error: Could not Generate Title"))
+        write_insights_to_db(5, session['url'], text2summarize, session['openAI_summary_URL'],session.get('summary_page_title', "Error: Could not Generate Title"))
         #Write the json to the file
-        write_json_to_file(text2summarize_hash + ".json", session['openAI_summary_URL_JSON'])
+        write_json_to_file(text2summarize_hash + "_insights.json", session['openAI_summary_URL_JSON'])
         #print("summarizeURL - 17")
         if check_folder_exists(app.config['UPLOAD_CONTENT']):
           #print("summarizeURL - 18")
@@ -1107,10 +1113,10 @@ def keyInsightsPDF():
                 pdf_file.save(pdf_path)
                 print("summarizePDF - 6")
             # Check if the hash exists in the Local Database, before calling the OpenAI API
-            if check_if_hash_exists(text2summarize_hash):
+            if get_key_insights_from_hash(text2summarize_hash):
                 print("summarizePDF - 7")
-                openAI_summary = get_summary_from_hash(text2summarize_hash)
-                openAI_summary_JSON = read_from_file_json(text2summarize_hash + ".json")
+                openAI_summary = get_key_insights_from_hash(text2summarize_hash)
+                openAI_summary_JSON = read_from_file_json(text2summarize_hash + "_insights.json")
                 summary_page_title = get_title_from_hash(text2summarize_hash)
                 #Support for Legacy Database entries without title
                 if not summary_page_title:
@@ -1143,10 +1149,18 @@ def keyInsightsPDF():
                 flash("Unable to extract content from the provided URL. Please try another URL.")
                 return redirect(url_for('keyInsightsPDF'))           
             # If we calculated the summary with OpenAI API, we need to write it to the database
-            if not check_if_hash_exists(text2summarize_hash):
+            if not get_key_insights_from_hash(text2summarize_hash) and not session.get('content_written', False):
                 print("summarizePDF - 11")
-                write_entry_to_db(2, session['pdf_filename'], text2summarize, session['openAI_summary_PDF'],session.get('summary_page_title', "Error: Could not Generate Title"))
-
+                write_insights_to_db(6, session['pdf_filename'], text2summarize, session['openAI_summary_PDF'],session.get('summary_page_title', "Error: Could not Generate Title"))
+                #Write the json to the file
+                write_json_to_file(text2summarize_hash + "_insights.json", session['openAI_summary_JSON_PDF'])
+                #print("summarizeURL - 17")
+                if check_folder_exists(app.config['UPLOAD_CONTENT']):
+                  #print("summarizeURL - 18")
+                  #Write the content to the file
+                  write_content_to_file(text2summarize_hash + ".txt", text2summarize)
+                #Set the content_written to True
+                session['content_written'] = True
                 # Calculate token count and average tokens per sentence
                 token_count = num_tokens_from_string(text2summarize)
                 avg_tokens_per_sentence = avg_sentence_length(text2summarize)
