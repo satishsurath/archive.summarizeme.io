@@ -173,12 +173,14 @@ def summarizeText():
             if not summary_page_title:
                summary_page_title = openAI_page_title(openAI_summary)
             openAI_summary_JSON = read_from_file_json(text2summarize_hash + ".json")
+            session['openAI_summary_JSON'] = openAI_summary_JSON
             session['is_trimmed'] = False
             session['form_prompt'] = text2summarize
             session['number_of_chunks'] = "Retrieved from Database"
         else:
             #Summarize the text using OpenAI API
             openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(text2summarize)
+            session['openAI_summary_JSON'] = openAI_summary_JSON
             openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
             summary_page_title = openAI_page_title(openAI_summary)
         # Now, we have all the data, Save the summary to the Session variables
@@ -295,6 +297,7 @@ def summarizeYouTube():
             if not summary_page_title:
                 summary_page_title = openAI_page_title(openAI_summary)
             openAI_summary_JSON = read_from_file_json(text2summarize_hash + ".json")
+            session['openAI_summary_JSON'] = openAI_summary_JSON
             session['is_trimmed'] = False
             session['form_prompt'] = transcript_text
             session['number_of_chunks'] = "Retrieved from Database"
@@ -302,6 +305,7 @@ def summarizeYouTube():
           #print("Calling OpenAI API")
           openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(transcript_text)
           #print("openAI_summary_JSON:" + str(openAI_summary_JSON))
+          session['openAI_summary_JSON'] = openAI_summary_JSON
           openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
           #print("openAI_summary:" + openAI_summary)
           summary_page_title = openAI_page_title(openAI_summary)
