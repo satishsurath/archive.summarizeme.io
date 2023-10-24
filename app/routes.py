@@ -1578,7 +1578,8 @@ def openAI_summarize_chunk(form_prompt):
     # Count tokens in the form_prompt
     token_count = num_tokens_from_string(form_prompt)
     # max_tokens = 3500 #original
-    max_tokens = 2400
+    # max_tokens = 2400
+    max_tokens = 1000
     is_trimmed = False
     
     # Trim the form_prompt if the token count exceeds the model's maximum limit
@@ -1610,7 +1611,7 @@ def openAI_summarize_chunk(form_prompt):
             # Added try-except block for API call
             try:
                 response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo-16k",
+                    model="gpt-3.5-turbo",#changed from 16k
                     messages=[message],
                     temperature=0.7,
                     max_tokens=500,
@@ -1641,7 +1642,7 @@ def openAI_summarize_chunk(form_prompt):
         # Added try-except block for API call
         try:
             response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo-16k",
+                model="gpt-3.5-turbo", #changed from 16k
                 messages=[message],
                 temperature=0.7,
                 max_tokens=500,
