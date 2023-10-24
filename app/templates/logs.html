@@ -156,6 +156,7 @@
               <hr>
 
             <p style="text-align: left;" data-id='{{entry.id}}' class="card2">
+              {% if entry.openAIsummary %}
                 {% for index, para in enumerate(entry.openAIsummary.split('\n')) %}
                 {% set number = index | int %}
                   {% if number < 2 %} 
@@ -175,6 +176,7 @@
                 {% endfor %}
               </span>
                 <button onclick='myFunction2({{ entry.id }})' class="myBtn">Read more</button>
+                {% endif %}
             </p>  
           </td>
         </tr>
