@@ -1,5 +1,5 @@
 import os
-import openai
+#import openai
 import json
 import trafilatura
 import tiktoken
@@ -7,6 +7,7 @@ import nltk
 import time
 import random
 import hashlib
+import promptlayer
 from nltk.tokenize import sent_tokenize
 from app import app, db, login_manager, linkedin_bp
 from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, UploadPDFForm, SummarizeFromYouTube
@@ -99,7 +100,12 @@ def request_loader(request):
 
 # -------------------- Flask app configurations --------------------
 app.jinja_env.filters['nl2br'] = nl2br
+
+promptlayer.api_key = os.getenv("PROMPTLAYER_API_KEY")
+openai = promptlayer.openai
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+
 nltk.download('punkt')
 
 # -------------------- Global variables --------------------
