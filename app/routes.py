@@ -555,6 +555,11 @@ def summarizePDF():
             print("summarizePDF - 4")
             # Read the PDF contents
             text2summarize = extract_text(BytesIO(pdf_file.read()))
+            if len(text2summarize) <= 0:
+                flash("Unable to extract content from the provided PDF. Please try another PDF.")
+                clear_session()
+                print("summarizePDF - 4.2 - text2summarize is None ")
+                return redirect(url_for('keyInsightsPDF'))            
             text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
             print("summarizePDF - 5")
             # Save the PDF file to the uploads folder
