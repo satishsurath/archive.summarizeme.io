@@ -1699,6 +1699,7 @@ def openAI_summarize_chunk(form_prompt):
             )
         except Exception as e:
             print(f"API call failed with error: {e}")
+            app.logger.error(f"API call failed with error: {e}")
             return None, None, None, None
         
         number_of_chunks = 1
@@ -1809,6 +1810,7 @@ def openAI_keyInsights_chunk(form_prompt):
                 )
             except Exception as e:
                 print(f"API call failed with error: {e}")
+                app.logger.error(f"API call failed with error: {e}")
                 return None, None, None, None
                 
             # Check if 'choices' and 'message' keys exist in the response
@@ -1840,6 +1842,7 @@ def openAI_keyInsights_chunk(form_prompt):
             )
         except Exception as e:
             print(f"API call failed with error: {e}")
+            app.logger.error(f"API call failed with error: {e}")
             return None, None, None, None
         
         number_of_chunks = 1
