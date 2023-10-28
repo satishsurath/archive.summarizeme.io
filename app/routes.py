@@ -310,6 +310,7 @@ def summarizeYouTube():
         else:
           #print("Calling OpenAI API")
           openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(transcript_text)
+          app.logger.info("openAI_summary_JSON:" + str(openAI_summary_JSON))
           #print("openAI_summary_JSON:" + str(openAI_summary_JSON))
           session['openAI_summary_JSON'] = openAI_summary_JSON
           openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
@@ -1577,6 +1578,7 @@ def openAI_summarize_chunk(form_prompt):
     # Step 3: Proceed as Normal if Content is Not Flagged   
     # Count tokens in the form_prompt
     token_count = num_tokens_from_string(form_prompt)
+    app.logger.info(f"Token count for the 'form_prompt': {token_count}")
     # max_tokens = 3500 #original
     # max_tokens = 2400
     max_tokens = 1000
@@ -1588,23 +1590,51 @@ def openAI_summarize_chunk(form_prompt):
         chunks = [sentence for sentence in sent_tokenize(form_prompt)]
         temp_prompt = ''
         
+        # for sentence in chunks:
+        #     if num_tokens_from_string(temp_prompt) < max_tokens:
+        #         temp_prompt += sentence
+        #     else:
+        #         form_prompt_chunks.append(temp_prompt.strip())
+        #         temp_prompt = sentence
+        #         # Break the loop if the sentence still exceeds max_tokens after trimming
+        #         if num_tokens_from_string(temp_prompt) > max_tokens:
+        #             break
+        
+        # if temp_prompt != '':
+        #     form_prompt_chunks.append(temp_prompt.strip())
+
         for sentence in chunks:
-            if num_tokens_from_string(temp_prompt + sentence) < max_tokens:
-                temp_prompt += sentence
-            else:
-                form_prompt_chunks.append(temp_prompt.strip())
-                temp_prompt = sentence
-                # Break the loop if the sentence still exceeds max_tokens after trimming
-                if num_tokens_from_string(temp_prompt) > max_tokens:
-                    break
-        
-        if temp_prompt != '':
-            form_prompt_chunks.append(temp_prompt.strip())
-        
+          # Check if adding the next sentence will exceed max_tokens
+          if num_tokens_from_string(temp_prompt + sentence + global_prompt) <= max_tokens:
+              temp_prompt += sentence
+          else:
+              form_prompt_chunks.append(temp_prompt.strip())
+              temp_prompt = sentence
+          
+          # Handle the scenario where a single sentence exceeds max_tokens after including global_prompt
+          while num_tokens_from_string(temp_prompt + global_prompt) > max_tokens:
+              words = temp_prompt.split()
+              partial_sentence = ''
+              while words and num_tokens_from_string(partial_sentence + ' '.join(words[:1]) + global_prompt) <= max_tokens:
+                  partial_sentence += words.pop(0) + ' '
+              if not partial_sentence:
+                  print(f"Unable to split sentence further: {temp_prompt}")
+                  break
+              form_prompt_chunks.append(partial_sentence.strip())
+              temp_prompt = ' '.join(words)
+
+        if temp_prompt:
+          form_prompt_chunks.append(temp_prompt.strip())
         is_trimmed = True
         completed_messages = []
         openai_responses = []
         total_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+        app.logger.info(f"Total number of chunks: {len(form_prompt_chunks)}")
+        app.logger.info(f"form_prompt_chunks: {form_prompt_chunks}")
+
+        #check if the first element in form_prompt_chunks is an empty string, if so, remove it
+        if form_prompt_chunks[0] == '':
+          form_prompt_chunks.pop(0)
         
         for chunk in form_prompt_chunks:
             message = {"role": "user", "content": global_prompt + chunk}
@@ -1619,8 +1649,10 @@ def openAI_summarize_chunk(form_prompt):
                     frequency_penalty=0.0,
                     presence_penalty=1
                 )
+                app.logger.info(f"API call succeeded with response: {response}")
             except Exception as e:
                 print(f"API call failed with error: {e}")
+                app.logger.error(f"API call failed with error: {e}")
                 return None, None, None, None
                 
             # Check if 'choices' and 'message' keys exist in the response
@@ -1705,24 +1737,48 @@ def openAI_keyInsights_chunk(form_prompt):
         chunks = [sentence for sentence in sent_tokenize(form_prompt)]
         temp_prompt = ''
         
+        # for sentence in chunks:
+        #     if num_tokens_from_string(temp_prompt + sentence) < max_tokens:
+        #         temp_prompt += sentence
+        #     else:
+        #         form_prompt_chunks.append(temp_prompt.strip())
+        #         temp_prompt = sentence
+        #         # Break the loop if the sentence still exceeds max_tokens after trimming
+        #         if num_tokens_from_string(temp_prompt) > max_tokens:
+        #             break
+        
+        # if temp_prompt != '':
+        #     form_prompt_chunks.append(temp_prompt.strip())
+
         for sentence in chunks:
-            if num_tokens_from_string(temp_prompt + sentence) < max_tokens:
-                temp_prompt += sentence
-            else:
-                form_prompt_chunks.append(temp_prompt.strip())
-                temp_prompt = sentence
-                # Break the loop if the sentence still exceeds max_tokens after trimming
-                if num_tokens_from_string(temp_prompt) > max_tokens:
-                    break
-        
-        if temp_prompt != '':
-            form_prompt_chunks.append(temp_prompt.strip())
-        
+          # Check if adding the next sentence will exceed max_tokens
+          if num_tokens_from_string(temp_prompt + sentence + global_prompt) <= max_tokens:
+              temp_prompt += sentence
+          else:
+              form_prompt_chunks.append(temp_prompt.strip())
+              temp_prompt = sentence
+          
+          # Handle the scenario where a single sentence exceeds max_tokens after including global_prompt
+          while num_tokens_from_string(temp_prompt + global_prompt) > max_tokens:
+              words = temp_prompt.split()
+              partial_sentence = ''
+              while words and num_tokens_from_string(partial_sentence + ' '.join(words[:1]) + global_prompt) <= max_tokens:
+                  partial_sentence += words.pop(0) + ' '
+              if not partial_sentence:
+                  print(f"Unable to split sentence further: {temp_prompt}")
+                  break
+              form_prompt_chunks.append(partial_sentence.strip())
+              temp_prompt = ' '.join(words)
+
+        if temp_prompt:
+          form_prompt_chunks.append(temp_prompt.strip())
+
         is_trimmed = True
         completed_messages = []
         openai_responses = []
         total_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
-        
+        if form_prompt_chunks[0] == '':
+          form_prompt_chunks.pop(0)
         for chunk in form_prompt_chunks:
             message = {"role": "user", "content": global_prompt + chunk}
             # Added try-except block for API call
