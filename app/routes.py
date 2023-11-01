@@ -8,6 +8,7 @@ import time
 import random
 import hashlib
 import promptlayer
+import rollbar
 from nltk.tokenize import sent_tokenize
 from app import app, db, login_manager, linkedin_bp
 from app.forms import SummarizeFromText, SummarizeFromURL, openAI_debug_form, UploadPDFForm, SummarizeFromYouTube
@@ -31,6 +32,16 @@ from io import BytesIO
 from flask_dance.contrib.linkedin import linkedin
 from collections.abc import Sequence
 from youtube_transcript_api import YouTubeTranscriptApi
+
+
+#--------------------- Rollbar for Logging ---------------------
+
+rollbar.init(
+  access_token='a816379fa9e84950a560a7e10d7f2982',
+  environment='testenv',
+  code_version='1.0'
+)
+rollbar.report_message('Rollbar is configured correctly', 'info')
 
 
 # -------------------- Utility functions --------------------
@@ -289,6 +300,8 @@ def summarizeYouTube():
             #print("2: transcript_text:" + transcript_text)
         except:
             flash("Unable to download transcript from the provided YouTube video. Please try another video.")
+            rollbar.report_message('Unable to download transcript from the provided YouTube video. Please try another video.', 'error')
+            rollbar.report_exc_info()
             return redirect(url_for('summarizeYouTube'))
 
         # Perform the summarization and other necessary tasks similar to the summarizeURL function
@@ -851,6 +864,8 @@ def keyInsightsYouTube():
             #print("2: transcript_text:" + transcript_text)
         except:
             flash("Unable to download transcript from the provided YouTube video. Please try another video.")
+            rollbar.report_message('Unable to download transcript from the provided YouTube video. Please try another video.', 'error')
+            rollbar.report_exc_info()
             return redirect(url_for('keyInsightsYouTube'))
 
         # Perform the summarization and other necessary tasks similar to the summarizeURL function
@@ -1552,6 +1567,8 @@ def retry_with_exponential_backoff(func):
                 return func(*args, **kwargs)
             except openai.error.RateLimitError as e:
                 print("Rate limit exceeded. Retrying after delay...")
+                rollbar.report_message('Rate limit exceeded. Retrying after delay...' + e, 'warning')
+                rollbar.report_exc_info()
                 time.sleep(retry_delay)
                 # Increase the delay for the next retry with some random jitter
                 retry_delay *= 2 * random.uniform(0.8, 1.2)
@@ -1576,6 +1593,8 @@ def openAI_summarize_chunk(form_prompt):
         print(moderation_response)
     except Exception as e:
         print(f"Moderation API call failed with error: {e}")
+        rollbar.report_message(f"Moderation API call failed with error: {e}", 'error')
+        rollbar.report_exc_info()
         return None, None, None, None
     
     # Step 2: Check the Moderation Result
@@ -1667,6 +1686,8 @@ def openAI_summarize_chunk(form_prompt):
                 app.logger.info(f"API call succeeded with response: {response}")
             except Exception as e:
                 print(f"API call failed with error: {e}")
+                rollbar.report_message(f"API call failed with error: {e}", 'error')
+                rollbar.report_exc_info()
                 app.logger.error(f"API call failed with error: {e}")
                 return None, None, None, None
                 
@@ -1699,6 +1720,8 @@ def openAI_summarize_chunk(form_prompt):
             )
         except Exception as e:
             print(f"API call failed with error: {e}")
+            rollbar.report_message(f"API call failed with error: {e}", 'error')
+            rollbar.report_exc_info()
             app.logger.error(f"API call failed with error: {e}")
             return None, None, None, None
         
@@ -1724,6 +1747,7 @@ def openAI_keyInsights_chunk(form_prompt):
         print(moderation_response)
     except Exception as e:
         print(f"Moderation API call failed with error: {e}")
+        rollbar.report_message(f"Moderation API call failed with error: {e}", 'error')
         return None, None, None, None
     
     # Step 2: Check the Moderation Result
@@ -1782,6 +1806,7 @@ def openAI_keyInsights_chunk(form_prompt):
                   partial_sentence += words.pop(0) + ' '
               if not partial_sentence:
                   print(f"Unable to split sentence further: {temp_prompt}")
+                  rollbar.report_message(f"Unable to split sentence further: {temp_prompt}", 'warning')
                   break
               form_prompt_chunks.append(partial_sentence.strip())
               temp_prompt = ' '.join(words)
@@ -1810,6 +1835,7 @@ def openAI_keyInsights_chunk(form_prompt):
                 )
             except Exception as e:
                 print(f"API call failed with error: {e}")
+                rollbar.report_message(f"API call failed with error: {e}", 'error')
                 app.logger.error(f"API call failed with error: {e}")
                 return None, None, None, None
                 
@@ -1842,6 +1868,7 @@ def openAI_keyInsights_chunk(form_prompt):
             )
         except Exception as e:
             print(f"API call failed with error: {e}")
+            rollbar.report_message(f"API call failed with error: {e}", 'error')
             app.logger.error(f"API call failed with error: {e}")
             return None, None, None, None
         
