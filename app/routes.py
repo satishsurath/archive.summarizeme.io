@@ -569,11 +569,14 @@ def summarizePDF():
             # Read the PDF contents
             text2summarize = extract_text(BytesIO(pdf_file.read()))
             app.logger.info("text2summarize:" + str(text2summarize))
-            if len(text2summarize) <= 0:
+            # Protect against empty or whitespace-only input
+            if len(text2summarize) <= 0 or text2summarize.isspace():
                 flash("Unable to extract content from the provided PDF. Please try another PDF.")
                 clear_session()
                 print("summarizePDF - 4.2 - text2summarize is None ")
-                return redirect(url_for('keyInsightsPDF'))            
+                return redirect(url_for('keyInsightsPDF'))
+            # # Protect against empty or whitespace-only input
+            # Calculate the hash of the text2summarize                          
             text2summarize_hash = hashlib.sha256(text2summarize.encode('utf-8')).hexdigest()
             print("summarizePDF - 5")
             # Save the PDF file to the uploads folder
@@ -1139,7 +1142,8 @@ def keyInsightsPDF():
             text2summarize = extract_text(BytesIO(pdf_file.read()))
             print(f"summarizePDF - 4.1 text2summarize: {text2summarize} ")
             print(f"summarizePDF - 4.2 len(text2summarize): {len(text2summarize)} ")
-            if len(text2summarize) <= 0:
+            # Check if the PDF was empty
+            if len(text2summarize) <= 0 or text2summarize.isspace():
                 flash("Unable to extract content from the provided PDF. Please try another PDF.")
                 clear_session()
                 print("summarizePDF - 4.2 - text2summarize is None ")
@@ -1597,6 +1601,7 @@ def openAI_summarize_chunk(form_prompt):
     # Protect against empty or whitespace-only input
     if not form_prompt or form_prompt.isspace():
         app.logger.error("Received empty or whitespace-only input.")
+        rollbar.report_message("Received empty or whitespace-only input.", 'error')
         return None, None, None, None
     
     # Step 1: Call the Moderation Endpoint First
@@ -1755,6 +1760,8 @@ def openAI_keyInsights_chunk(form_prompt):
     
     # Protect against empty or whitespace-only input
     if not form_prompt or form_prompt.isspace():
+        app.logger.error("Received empty or whitespace-only input.")
+        rollbar.report_message("Received empty or whitespace-only input.", 'error')        
         return None, None, None, None
     
     # Step 1: Call the Moderation Endpoint First
