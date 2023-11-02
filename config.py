@@ -46,3 +46,6 @@ class Config(object):
     
     # Configure YOURLS
     YOURLS_SECRET_TOKEN = os.environ.get('YOURLS_SECRET_TOKEN')
+
+    # Rollbar Environment
+    ROLLBAR_ENV = os.environ.get('ROLLBAR_ENV') or "testenv"

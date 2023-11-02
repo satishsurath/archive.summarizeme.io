@@ -38,7 +38,7 @@ from youtube_transcript_api import YouTubeTranscriptApi
 
 rollbar.init(
   access_token='a816379fa9e84950a560a7e10d7f2982',
-  environment='testenv',
+  environment=app.config['ROLLBAR_ENV'],
   code_version='1.0'
 )
 rollbar.report_message('Rollbar is configured correctly', 'info')
@@ -1574,18 +1574,38 @@ def retry_with_exponential_backoff(func):
     def wrapper(*args, **kwargs):
         max_retries = 5
         retry_delay = 1  # Initial delay in seconds
-        for _ in range(max_retries):
+        for attempt in range(max_retries):
             try:
                 return func(*args, **kwargs)
-            except openai.error.RateLimitError as e:
-                print("Rate limit exceeded. Retrying after delay...")
-                rollbar.report_message('Rate limit exceeded. Retrying after delay...' + e, 'warning')
+            except (openai.error.ServiceUnavailableError) as e:
+                error_type = "Rate limit exceeded" if isinstance(e, openai.error.RateLimitError) else "Service unavailable"
+                print(f"{error_type}. Retrying after delay... (Attempt {attempt + 1} of {max_retries})")
+                rollbar.report_message(f'{error_type}. Retrying after delay... {str(e)}', 'warning')
                 rollbar.report_exc_info()
                 time.sleep(retry_delay)
                 # Increase the delay for the next retry with some random jitter
                 retry_delay *= 2 * random.uniform(0.8, 1.2)
-        # If max_retries exceeded, raise an exception
-        raise Exception("API rate limit exceeded even after retries.")
+            except (openai.error.RateLimitError) as e:
+                error_type = "Rate limit exceeded" if isinstance(e, openai.error.RateLimitError) else "Service unavailable"
+                print(f"{error_type}. Retrying after delay... (Attempt {attempt + 1} of {max_retries})")
+                rollbar.report_message(f'{error_type}. Retrying after delay... {str(e)}', 'warning')
+                rollbar.report_exc_info()
+                time.sleep(retry_delay)
+                # Increase the delay for the next retry with some random jitter
+                retry_delay *= 2 * random.uniform(0.8, 1.2)                
+            except openai.error.OpenAIError as e:
+                # Handle other OpenAI-specific errors
+                print(f"An OpenAI error occurred: {e}")
+                rollbar.report_message(f"An OpenAI error occurred: {e}", 'error')
+                rollbar.report_exc_info()
+                break  # Break out of retry loop for non-retryable errors
+            except Exception as e:
+                # Handle other unforeseen errors
+                print(f"An unexpected error occurred: {e}")
+                rollbar.report_message(f"An unexpected error occurred: {e}", 'error')
+                rollbar.report_exc_info()
+                break  # Break out of retry loop for non-retryable errors
+        raise Exception("API call failed even after retries.")
     return wrapper
 
 # Apply the retry decorator to the original function
