@@ -109,6 +109,58 @@ if not app.debug:
 
     # Log the startup message using the separate logger
     startup_logger.info('--------SummarizeMe startup-----------')
+else:
+    # Set up email error logging
+    if app.config['MAIL_SERVER']:
+        auth = None
+        if app.config['MAIL_USERNAME'] or app.config['MAIL_PASSWORD']:
+            auth = (app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+        secure = None
+        if app.config['MAIL_USE_TLS']:
+            secure = ()
+        mail_handler = SMTPHandler(
+            mailhost=(app.config['MAIL_SERVER'], app.config['MAIL_PORT']),
+            fromaddr='ErrorLogFile@' + app.config['MAIL_SERVER'],
+            toaddrs=app.config['ADMINS'], subject='SummarizeMe.io Failure',
+            credentials=auth, secure=secure)
+        mail_handler.setLevel(logging.ERROR)
+        mail_handler.setFormatter(SessionDataFormatter(
+            '%(asctime)s %(levelname)s: %(message)s '
+            '[in %(pathname)s:%(lineno)d]\n'
+            'Request data: %(request_data)s\n'
+            'Session data: %(session_data)s\n'
+            'User Agent: %(user_agent)s\n'
+        ))
+        app.logger.addHandler(mail_handler)
+
+    if not os.path.exists('logs'):
+        os.mkdir('logs')
+    # Create a separate logger for startup logs
+    startup_logger = logging.getLogger('startup_logger')
+    startup_logger.setLevel(logging.INFO)
+    startup_file_handler = RotatingFileHandler('logs/startup.log', maxBytes=10240, backupCount=10)
+    file_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]')
+    startup_file_handler.setFormatter(file_formatter)
+    startup_logger.addHandler(startup_file_handler)
+    
+    file_handler = RotatingFileHandler(
+        'logs/summarizeme.log', 
+        maxBytes=10240, 
+        backupCount=10
+    )
+    file_handler.setFormatter(SessionDataFormatter(
+        '%(asctime)s %(levelname)s: %(message)s '
+        '[in %(pathname)s:%(lineno)d]\n'
+        'Request data: %(request_data)s\n'
+        'Session data: %(session_data)s\n'
+        'User Agent: %(user_agent)s\n'
+    ))
+    file_handler.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.INFO)
+
+    # Log the startup message using the separate logger
+    startup_logger.info('--------SummarizeMe startup-----------')
 
 
 # ---------------  shell context processor --------------- #

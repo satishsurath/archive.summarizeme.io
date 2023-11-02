@@ -568,6 +568,7 @@ def summarizePDF():
             print("summarizePDF - 4")
             # Read the PDF contents
             text2summarize = extract_text(BytesIO(pdf_file.read()))
+            app.logger.info("text2summarize:" + str(text2summarize))
             if len(text2summarize) <= 0:
                 flash("Unable to extract content from the provided PDF. Please try another PDF.")
                 clear_session()
@@ -600,6 +601,7 @@ def summarizePDF():
                 session['form_prompt'] = text2summarize
                 session['number_of_chunks'] = "Retrieved from Database"
             else:
+              try:
                 print("summarizePDF - 8")
                 openAI_summary_JSON, session['is_trimmed'], session['form_prompt'], session['number_of_chunks'] = openAI_summarize_chunk(text2summarize)
                 openAI_summary = openAI_summary_JSON["choices"][0]['message']['content']
@@ -607,6 +609,12 @@ def summarizePDF():
                 write_json_to_file(text2summarize_hash + ".json", openAI_summary_JSON)
                 if check_folder_exists(app.config['UPLOAD_CONTENT']):
                   write_content_to_file(text2summarize_hash + ".txt", text2summarize)
+              except Exception as e:
+                flash("Unable to summarize the provided PDF. Please try another PDF.")
+                app.logger.error(f"Unable to summarize the provided PDF. Please try another PDF. Error: {e}")
+                rollbar.report_message('Unable to summarize the provided PDF. Please try another PDF.', 'error')
+                clear_session()
+                return redirect(url_for('keyInsightsPDF'))
             print("summarizePDF - 9")
             session['openAI_summary_PDF'] = openAI_summary
             session['openAI_summary_JSON_PDF'] = openAI_summary_JSON
@@ -1583,16 +1591,22 @@ def openAI_summarize_chunk(form_prompt):
     # This prompt is being used locally, so no need to declare it as global
     global_prompt = "Summarize the below text into a few short bullet points in English. Treat everything below this sentence as text to be summarized: \n\n"
     
+    # Debug: Check the form_prompt at the start
+    app.logger.debug(f"Received form_prompt: {form_prompt}")
+
     # Protect against empty or whitespace-only input
     if not form_prompt or form_prompt.isspace():
+        app.logger.error("Received empty or whitespace-only input.")
         return None, None, None, None
     
     # Step 1: Call the Moderation Endpoint First
     try:
         moderation_response = openai.Moderation.create(input=form_prompt)
+        app.logger.info(f"Moderation response: {moderation_response}")
         print(moderation_response)
     except Exception as e:
         print(f"Moderation API call failed with error: {e}")
+        app.logger.error(f"Moderation API call failed with error: {e}")
         rollbar.report_message(f"Moderation API call failed with error: {e}", 'error')
         rollbar.report_exc_info()
         return None, None, None, None
@@ -1600,6 +1614,7 @@ def openAI_summarize_chunk(form_prompt):
     # Step 2: Check the Moderation Result
     if moderation_response["results"][0]["flagged"]:
         # Construct a similar response structure indicating content violation
+        app.logger.info("Content flagged by moderation.")
         response = {
             "choices": [{
                 "message": {
@@ -1620,6 +1635,7 @@ def openAI_summarize_chunk(form_prompt):
     
     # Trim the form_prompt if the token count exceeds the model's maximum limit
     if token_count > max_tokens:
+        app.logger.info("Trimming the prompt as token count exceeds the limit.")
         form_prompt_chunks = []
         chunks = [sentence for sentence in sent_tokenize(form_prompt)]
         temp_prompt = ''
