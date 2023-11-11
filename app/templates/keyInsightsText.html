@@ -46,11 +46,11 @@
             <hr>          
             
             <h2>Key Insights:</h2>
-            <p>
+            <ul>
                 {% for para_summary in openAI_summary %}
-                    {{para_summary}}<br>
+                    <li>{{para_summary}}</li>
                 {% endfor %}
-            </p>
+            </ul>
             <hr>
             {% include 'reuse-copy-share.html' %}
             <hr>
