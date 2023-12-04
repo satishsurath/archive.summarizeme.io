@@ -29,6 +29,11 @@ a {
   color: var(--text-color);
 }
 
+.nav-links
+{
+  display: inline-block;
+}
+
 .nav-links a {
   color: inherit;
   text-decoration: none;
@@ -80,7 +85,6 @@ body.dark-mode .nav-links a:hover {
 }
 
 li {
-  display: inline-block;
   margin-right: 0.4em;
   margin-left: 0.4em;
   margin-top: 0.5em;
