@@ -168,6 +168,16 @@ function copySummaryToClipboard() {
     alert('Summary copied to clipboard!');
 }
 
+function copyOriginalContentToClipboard() {
+    const textarea = document.createElement('textarea');
+    textarea.textContent = document.querySelector('#original-content').textContent;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    alert('Summary copied to clipboard!');
+}
+
 
 function setTheme(theme) {
     const root = document.documentElement;
