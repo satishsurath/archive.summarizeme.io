@@ -1370,8 +1370,8 @@ def logout():
   return redirect(url_for('index'))
 
 #rewriting the logs to show user's entries if session.get('name', False) is True
-@app.route('/logs', methods=['GET', 'POST'])
-def logs():
+@app.route('/logs2', methods=['GET', 'POST'])
+def logs2():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 25, type=int)
 
@@ -1429,6 +1429,55 @@ def logs():
         return render_template('logs.html', entries=entries, is_authenticated=current_user.is_authenticated)
     else:
         return render_template('logs.html', entries=entries, is_authenticated=current_user.is_authenticated, name=session['name'])
+
+
+# Assuming Entry_Posts_History and Entry_Post models are defined with SQLAlchemy
+
+@app.route('/logs', methods=['GET', 'POST'])
+def logs():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 25, type=int)
+
+    if current_user.is_authenticated:
+        # Directly paginate the query instead of fetching all and filtering in Python
+        entry_post_history_paginated = Entry_Posts_History.query \
+            .join(Entry_Posts_History.entry_post) \
+            .join(Entry_Posts_History.oAuthUser) \
+            .order_by(Entry_Posts_History.entry_post_id.desc()) \
+            .paginate(page=page, per_page=per_page)
+
+        final_results = [
+            {
+                'id': item.entry_post.id,
+                'timestamp': item.entry_post.timestamp,
+                'url': item.entry_post.url,
+                'text2summarize': item.entry_post.text2summarize,
+                'text2summarize_hash': item.entry_post.text2summarize_hash,
+                'openAIsummary': item.entry_post.openAIsummary,
+                'posttype': item.entry_post.posttype,
+                'email': item.oAuthUser.email,
+                'name': item.oAuthUser.name,
+            } for item in entry_post_history_paginated.items
+        ]
+
+        entries = CustomPagination(final_results, page, per_page, entry_post_history_paginated.total)
+
+    elif session.get('name', False):
+        user = oAuthUser.query.filter_by(linkedin_id=session['linkedin_id']).first()
+        if user:
+            entry_post_history_paginated = Entry_Posts_History.query.filter_by(oAuthUser_id=user.id) \
+                .order_by(Entry_Posts_History.id.desc()) \
+                .paginate(page=page, per_page=per_page)
+
+            entry_post_list = [entry.entry_post for entry in entry_post_history_paginated.items]
+            entries = CustomPagination(entry_post_list, page, entry_post_history_paginated.page, entry_post_history_paginated.per_page, entry_post_history_paginated.total)
+        else:
+            entries = None
+    else:
+        return redirect(url_for('adminlogin'))
+
+    return render_template('logs.html', entries=entries, is_authenticated=current_user.is_authenticated, name=session.get('name'))
+
 
 
 # writing route for url_for('delete_entry', entry_id=entry.id) 
