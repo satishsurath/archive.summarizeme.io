@@ -1591,7 +1591,7 @@ def openAI_page_title(form_prompt):
     # Count tokens in the form_prompt
     token_count = num_tokens_from_string(form_prompt)
     # max_tokens = 3500 #original
-    max_tokens = 2400
+    max_tokens = 4000
     
     # Trim the form_prompt if the token count exceeds the model's maximum limit
     if token_count > max_tokens:
@@ -1702,9 +1702,9 @@ def openAI_summarize_chunk(form_prompt):
     # Count tokens in the form_prompt
     token_count = num_tokens_from_string(form_prompt)
     app.logger.info(f"Token count for the 'form_prompt': {token_count}")
-    # max_tokens = 3500 #original
+    max_tokens = 3500 #original
     # max_tokens = 2400
-    max_tokens = 1000
+    # max_tokens = 1000
     is_trimmed = False
     
     # Trim the form_prompt if the token count exceeds the model's maximum limit
@@ -1768,7 +1768,7 @@ def openAI_summarize_chunk(form_prompt):
                     model="gpt-3.5-turbo",#changed from 16k
                     messages=[message],
                     temperature=0.7,
-                    max_tokens=500,
+                    max_tokens=1000,
                     top_p=1.0,
                     frequency_penalty=0.0,
                     presence_penalty=1
@@ -1803,7 +1803,7 @@ def openAI_summarize_chunk(form_prompt):
                 model="gpt-3.5-turbo", #changed from 16k
                 messages=[message],
                 temperature=0.7,
-                max_tokens=500,
+                max_tokens=1000,
                 top_p=1.0,
                 frequency_penalty=0.0,
                 presence_penalty=1
@@ -1857,9 +1857,9 @@ def openAI_keyInsights_chunk(form_prompt):
     # Step 3: Proceed as Normal if Content is Not Flagged   
     # Count tokens in the form_prompt
     token_count = num_tokens_from_string(form_prompt)
-    # max_tokens = 3500 #original
+    max_tokens = 3500 #original
     # max_tokens = 2400
-    max_tokens = 1000
+    # max_tokens = 1000
 
     is_trimmed = False
     
@@ -1920,7 +1920,7 @@ def openAI_keyInsights_chunk(form_prompt):
                     model="gpt-3.5-turbo", #changing this from 16K to 4K Model
                     messages=[message],
                     temperature=0.7,
-                    max_tokens=500,
+                    max_tokens=1000,
                     top_p=1.0,
                     frequency_penalty=0.0,
                     presence_penalty=1
@@ -1953,7 +1953,7 @@ def openAI_keyInsights_chunk(form_prompt):
                 model="gpt-3.5-turbo", #changing this from 16K to 4K Model
                 messages=[message],
                 temperature=0.7,
-                max_tokens=500,
+                max_tokens=1000,
                 top_p=1.0,
                 frequency_penalty=0.0,
                 presence_penalty=1
